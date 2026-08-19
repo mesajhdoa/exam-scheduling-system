@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import timedelta
 import jdatetime
 import random
+import time
 
 from scheduler_core import (
     build_conflict_graph,
@@ -686,4 +687,230 @@ if df is not None:
                     csv_output,
                     "exam_schedule.csv",
                     "text/csv"
+                )
+
+
+
+            # --------------------------------------
+            # Compare All Algorithms
+            # --------------------------------------
+
+            st.divider()
+
+            st.subheader(
+                "7. Algorithm Comparison"
+            )
+
+            st.write(
+                "Run all five scheduling methods on the same "
+                "dataset and compare solution quality and runtime."
+            )
+
+            if st.button(
+                "Compare All Algorithms"
+            ):
+
+                algorithm_names = [
+                    "Greedy",
+                    "Welsh-Powell",
+                    "DSATUR",
+                    "Local Search",
+                    "Simulated Annealing"
+                ]
+
+                comparison_rows = []
+
+                for method in algorithm_names:
+
+                    start_time = time.perf_counter()
+
+                    if method == "Greedy":
+
+                        result_schedule = (
+                            greedy_coloring(graph)
+                        )
+
+                    elif method == "Welsh-Powell":
+
+                        result_schedule = (
+                            welsh_powell(graph)
+                        )
+
+                    elif method == "DSATUR":
+
+                        result_schedule = (
+                            dsatur(graph)
+                        )
+
+                    elif method == "Local Search":
+
+                        initial = dsatur(graph)
+
+                        result_schedule = (
+                            local_search(
+                                initial,
+                                graph,
+                                students,
+                                slot_weight
+                            )
+                        )
+
+                    else:
+
+                        initial = dsatur(graph)
+
+                        result_schedule = (
+                            simulated_annealing(
+                                initial,
+                                graph,
+                                students,
+                                slot_weight
+                            )
+                        )
+
+                    end_time = time.perf_counter()
+
+                    runtime_ms = (
+                        end_time - start_time
+                    ) * 1000
+
+                    result_valid = (
+                        validate_schedule(
+                            graph,
+                            result_schedule
+                        )
+                    )
+
+                    result_penalty = (
+                        consecutive_exam_penalty(
+                            students,
+                            result_schedule
+                        )
+                    )
+
+                    result_cost = (
+                        total_cost(
+                            result_schedule,
+                            students,
+                            slot_weight
+                        )
+                    )
+
+                    result_slots = max(
+                        result_schedule.values()
+                    )
+
+                    comparison_rows.append(
+                        {
+                            "Algorithm": method,
+                            "Slots": result_slots,
+                            "Penalty": result_penalty,
+                            "Cost": result_cost,
+                            "Runtime (ms)": round(
+                                runtime_ms,
+                                3
+                            ),
+                            "Valid": (
+                                "Yes"
+                                if result_valid
+                                else "No"
+                            )
+                        }
+                    )
+
+                comparison_df = pd.DataFrame(
+                    comparison_rows
+                )
+
+                comparison_df = (
+                    comparison_df.sort_values(
+                        [
+                            "Cost",
+                            "Runtime (ms)"
+                        ]
+                    )
+                    .reset_index(
+                        drop=True
+                    )
+                )
+
+                st.dataframe(
+                    comparison_df,
+                    use_container_width=True,
+                    hide_index=True
+                )
+
+                valid_results = (
+                    comparison_df[
+                        comparison_df[
+                            "Valid"
+                        ]
+                        == "Yes"
+                    ]
+                )
+
+                if not valid_results.empty:
+
+                    best_result = (
+                        valid_results.iloc[0]
+                    )
+
+                    best_col1, best_col2 = (
+                        st.columns(2)
+                    )
+
+                    best_col1.metric(
+                        "Best Algorithm",
+                        best_result[
+                            "Algorithm"
+                        ]
+                    )
+
+                    best_col2.metric(
+                        "Best Cost",
+                        int(
+                            best_result[
+                                "Cost"
+                            ]
+                        )
+                    )
+
+                st.subheader(
+                    "Cost Comparison"
+                )
+
+                cost_chart = (
+                    comparison_df[
+                        [
+                            "Algorithm",
+                            "Cost"
+                        ]
+                    ]
+                    .set_index(
+                        "Algorithm"
+                    )
+                )
+
+                st.bar_chart(
+                    cost_chart
+                )
+
+                st.subheader(
+                    "Runtime Comparison"
+                )
+
+                runtime_chart = (
+                    comparison_df[
+                        [
+                            "Algorithm",
+                            "Runtime (ms)"
+                        ]
+                    ]
+                    .set_index(
+                        "Algorithm"
+                    )
+                )
+
+                st.bar_chart(
+                    runtime_chart
                 )
