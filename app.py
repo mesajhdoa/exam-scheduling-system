@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import timedelta
+import jdatetime
 
 from scheduler_core import (
     build_conflict_graph,
@@ -115,7 +116,12 @@ if uploaded_file is not None:
         )
 
         graph = build_conflict_graph(students)
-
+        
+        course_sizes = (
+            df.groupby("Course")["Student_ID"]
+            .nunique()
+            .to_dict()
+        )
         # ------------------------------------------
         # Dataset Information
         # ------------------------------------------
@@ -282,15 +288,25 @@ if uploaded_file is not None:
 
             for course, slot in schedule.items():
 
+            for course, slot in schedule.items():
+
                 exam_date, exam_time = (
                     slot_to_datetime(slot)
+                )
+
+                jalali_date = jdatetime.date.fromgregorian(
+                    date=exam_date
                 )
 
                 schedule_rows.append(
                     {
                         "Course": course,
+                        "Students": course_sizes.get(course, 0),
                         "Slot": slot,
-                        "Date": exam_date.strftime(
+                        "Gregorian Date": exam_date.strftime(
+                            "%Y-%m-%d"
+                        ),
+                        "Jalali Date": jalali_date.strftime(
                             "%Y-%m-%d"
                         ),
                         "Time": exam_time
