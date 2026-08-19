@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import timedelta
 
 from scheduler_core import (
     build_conflict_graph,
@@ -21,6 +22,7 @@ st.set_page_config(
 )
 
 st.title("Exam Scheduling System")
+
 st.write(
     "Upload student-course enrollment data and generate "
     "a conflict-free optimized exam schedule."
@@ -48,6 +50,22 @@ slot_weight = st.sidebar.slider(
     min_value=1,
     max_value=30,
     value=10
+)
+
+# --------------------------------------------------
+# Exam Calendar
+# --------------------------------------------------
+
+st.sidebar.subheader("Exam Calendar")
+
+start_date = st.sidebar.date_input(
+    "First Exam Date"
+)
+
+exam_times = st.sidebar.multiselect(
+    "Exam Times",
+    ["09:00", "13:00", "16:00"],
+    default=["09:00", "13:00"]
 )
 
 # --------------------------------------------------
@@ -81,7 +99,10 @@ if uploaded_file is not None:
 
         st.success("Student data loaded successfully.")
 
-        st.dataframe(df)
+        st.dataframe(
+            df,
+            use_container_width=True
+        )
 
         # ------------------------------------------
         # Convert CSV to student dictionary
@@ -94,6 +115,10 @@ if uploaded_file is not None:
         )
 
         graph = build_conflict_graph(students)
+
+        # ------------------------------------------
+        # Dataset Information
+        # ------------------------------------------
 
         st.subheader("2. Dataset Information")
 
@@ -110,7 +135,10 @@ if uploaded_file is not None:
         )
 
         conflicts = (
-            sum(len(neighbors) for neighbors in graph.values())
+            sum(
+                len(neighbors)
+                for neighbors in graph.values()
+            )
             // 2
         )
 
@@ -126,6 +154,18 @@ if uploaded_file is not None:
         st.subheader("3. Generate Schedule")
 
         if st.button("Generate Exam Schedule"):
+
+            if not exam_times:
+
+                st.error(
+                    "Please select at least one exam time."
+                )
+
+                st.stop()
+
+            # --------------------------------------
+            # Select Algorithm
+            # --------------------------------------
 
             if algorithm == "Greedy":
 
@@ -162,7 +202,7 @@ if uploaded_file is not None:
                 )
 
             # --------------------------------------
-            # Results
+            # Optimization Results
             # --------------------------------------
 
             valid = validate_schedule(
@@ -208,17 +248,57 @@ if uploaded_file is not None:
             )
 
             # --------------------------------------
+            # Convert Slot to Date and Time
+            # --------------------------------------
+
+            def slot_to_datetime(slot):
+
+                slot_index = slot - 1
+
+                exams_per_day = len(exam_times)
+
+                day_offset = (
+                    slot_index // exams_per_day
+                )
+
+                time_index = (
+                    slot_index % exams_per_day
+                )
+
+                exam_date = (
+                    start_date
+                    + timedelta(days=day_offset)
+                )
+
+                exam_time = exam_times[time_index]
+
+                return exam_date, exam_time
+
+            # --------------------------------------
             # Schedule Table
             # --------------------------------------
 
-            schedule_df = pd.DataFrame(
-                [
+            schedule_rows = []
+
+            for course, slot in schedule.items():
+
+                exam_date, exam_time = (
+                    slot_to_datetime(slot)
+                )
+
+                schedule_rows.append(
                     {
                         "Course": course,
-                        "Slot": slot
+                        "Slot": slot,
+                        "Date": exam_date.strftime(
+                            "%Y-%m-%d"
+                        ),
+                        "Time": exam_time
                     }
-                    for course, slot in schedule.items()
-                ]
+                )
+
+            schedule_df = pd.DataFrame(
+                schedule_rows
             )
 
             schedule_df = schedule_df.sort_values(
