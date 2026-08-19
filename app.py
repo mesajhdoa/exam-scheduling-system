@@ -288,7 +288,6 @@ if uploaded_file is not None:
 
             for course, slot in schedule.items():
 
-            for course, slot in schedule.items():
 
                 exam_date, exam_time = (
                     slot_to_datetime(slot)
