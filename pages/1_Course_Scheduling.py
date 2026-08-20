@@ -277,9 +277,11 @@ if st.button(
     # Scheduling Data
     # --------------------------------------------------
 
+    # --------------------------------------------------
+    # Scheduling Data
+    # --------------------------------------------------
+
     slot_courses = {
-"Related Group": related_group
-        
         (slot["day"], slot["time"]): []
         for slot in all_slots
     }
@@ -301,81 +303,30 @@ if st.button(
     # Conflict Function
     # --------------------------------------------------
 
-def courses_conflict(
-    course_a,
-    semester_a,
-    cohort_a,
-    related_group_a,
-    course_b,
-    semester_b,
-    cohort_b,
-    related_group_b
-):
-
-    # Same cohort and same semester
-    if (
-        cohort_a == cohort_b
-        and semester_a == semester_b
+    def courses_conflict(
+        course_a,
+        semester_a,
+        cohort_a,
+        related_group_a,
+        course_b,
+        semester_b,
+        cohort_b,
+        related_group_b
     ):
-        return True
 
-    # Same related course group
-    if (
-        related_group_a
-        and related_group_b
-        and related_group_a == related_group_b
-    ):
-        return True
-
-    # Explicitly defined conflict
-    pair = frozenset(
-        [
-            course_a,
-            course_b
-        ]
-    )
-
-    if pair in conflict_pairs:
-        return True
-
-    return False
-
-    # Same cohort and same semester
-    if (
-        cohort_a == cohort_b
-        and semester_a == semester_b
-    ):
-        return True
-
-    # Same related course group
-    if (
-        related_group_a
-        and related_group_b
-        and related_group_a == related_group_b
-    ):
-        return True
-
-    # Explicitly defined conflict
-    pair = frozenset(
-        [
-            course_a,
-            course_b
-        ]
-    )
-
-    if pair in conflict_pairs:
-        return True
-
-    return False
-    
-        # Same cohort and same semester
         if (
             cohort_a == cohort_b
             and semester_a == semester_b
         ):
             return True
 
-        # Explicitly defined conflict
+        if (
+            related_group_a
+            and related_group_b
+            and related_group_a == related_group_b
+        ):
+            return True
+
         pair = frozenset(
             [
                 course_a,
@@ -398,12 +349,11 @@ def courses_conflict(
         course = row["Course"]
         semester = row["Semester"]
         cohort = row["Cohort"]
-related_group = str(
-    row["Related Group"]
-).strip()
-        
 
-        # Prefer less busy days and slots
+        related_group = str(
+            row["Related Group"]
+        ).strip()
+
         ordered_slots = sorted(
             all_slots,
             key=lambda slot: (
@@ -439,17 +389,16 @@ related_group = str(
                 slot_key
             ]:
 
-if courses_conflict(
-    course,
-    semester,
-    cohort,
-    related_group,
-    existing["Course"],
-    existing["Semester"],
-    existing["Cohort"],
-    existing["Related Group"]
-):
-                
+                if courses_conflict(
+                    course,
+                    semester,
+                    cohort,
+                    related_group,
+                    existing["Course"],
+                    existing["Semester"],
+                    existing["Cohort"],
+                    existing["Related Group"]
+                ):
                     can_use_slot = False
                     break
 
@@ -471,9 +420,8 @@ if courses_conflict(
                     {
                         "Course": course,
                         "Semester": semester,
-                        "Cohort": cohort
-"Related Group": related_group
-                        
+                        "Cohort": cohort,
+                        "Related Group": related_group
                     }
                 )
 
@@ -499,8 +447,7 @@ if courses_conflict(
                     "Time": "-"
                 }
             )
-
-
+    
     # --------------------------------------------------
     # 5. Results
     # --------------------------------------------------
