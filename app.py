@@ -16,7 +16,7 @@ from scheduler_core import (
     consecutive_exam_penalty,
     total_cost
 )
-
+from exact_solver import exact_cp_sat
 
 # --------------------------------------------------
 # Page Settings
@@ -817,11 +817,65 @@ if df is not None:
                             )
                         }
                     )
+                # ----------------------------------
+                # Exact CP-SAT
+                # ----------------------------------
 
+                exact_schedule, exact_info = exact_cp_sat(
+                    graph,
+                    students,
+                    slot_weight,
+                    time_limit=30
+                )
+
+                exact_optimal = (
+                    exact_info["optimal"]
+                    and exact_info["cost"] is not None
+                )
+
+                if exact_schedule is not None:
+
+                    comparison_rows.append(
+                        {
+                            "Algorithm": "Exact CP-SAT",
+                            "Slots": exact_info["slots"],
+                            "Penalty": exact_info["penalty"],
+                            "Cost": exact_info["cost"],
+                            "Runtime (ms)": round(
+                                exact_info["runtime"] * 1000,
+                                3
+                            ),
+                            "Valid": (
+                                "Yes"
+                                if validate_schedule(
+                                    graph,
+                                    exact_schedule
+                                )
+                                else "No"
+                            )
+                        }
+                    )
+                
                 comparison_df = pd.DataFrame(
                     comparison_rows
                 )
+                if exact_optimal:
 
+                    optimal_cost = exact_info["cost"]
+
+                    comparison_df["Gap (%)"] = (
+                        (
+                            comparison_df["Cost"]
+                            - optimal_cost
+                        )
+                        / optimal_cost
+                        * 100
+                    ).round(2)
+
+                else:
+
+                    comparison_df["Gap (%)"] = "N/A"
+                
                 comparison_df = (
                     comparison_df.sort_values(
                         [
