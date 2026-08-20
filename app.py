@@ -934,11 +934,6 @@ if df is not None:
 
                     best_col2.metric(
                         "Best Cost",
-                        int(
-                            best_result[
-                                "Cost"
-                            ]
-                        )
                     )
 
                 st.subheader(
