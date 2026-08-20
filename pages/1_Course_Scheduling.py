@@ -302,9 +302,6 @@ if st.button(
     # --------------------------------------------------
 
 def courses_conflict(
-related_group,
-existing["Related Group"],
-    
     course_a,
     semester_a,
     cohort_a,
@@ -314,6 +311,34 @@ existing["Related Group"],
     cohort_b,
     related_group_b
 ):
+
+    # Same cohort and same semester
+    if (
+        cohort_a == cohort_b
+        and semester_a == semester_b
+    ):
+        return True
+
+    # Same related course group
+    if (
+        related_group_a
+        and related_group_b
+        and related_group_a == related_group_b
+    ):
+        return True
+
+    # Explicitly defined conflict
+    pair = frozenset(
+        [
+            course_a,
+            course_b
+        ]
+    )
+
+    if pair in conflict_pairs:
+        return True
+
+    return False
 
     # Same cohort and same semester
     if (
@@ -414,15 +439,17 @@ related_group = str(
                 slot_key
             ]:
 
-                if courses_conflict(
-                    course,
-                    semester,
-                    cohort,
-                    existing["Course"],
-                    existing["Semester"],
-                    existing["Cohort"]
-                ):
-
+if courses_conflict(
+    course,
+    semester,
+    cohort,
+    related_group,
+    existing["Course"],
+    existing["Semester"],
+    existing["Cohort"],
+    existing["Related Group"]
+):
+                
                     can_use_slot = False
                     break
 
@@ -445,6 +472,8 @@ related_group = str(
                         "Course": course,
                         "Semester": semester,
                         "Cohort": cohort
+"Related Group": related_group
+                        
                     }
                 )
 
