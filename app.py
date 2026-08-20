@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 from datetime import timedelta
 import jdatetime
-import random
+import random 
 import time
 
 from scheduler_core import (
