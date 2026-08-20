@@ -278,6 +278,8 @@ if st.button(
     # --------------------------------------------------
 
     slot_courses = {
+"Related Group": related_group
+        
         (slot["day"], slot["time"]): []
         for slot in all_slots
     }
@@ -299,15 +301,48 @@ if st.button(
     # Conflict Function
     # --------------------------------------------------
 
-    def courses_conflict(
-        course_a,
-        semester_a,
-        cohort_a,
-        course_b,
-        semester_b,
-        cohort_b
-    ):
+def courses_conflict(
+related_group,
+existing["Related Group"],
+    
+    course_a,
+    semester_a,
+    cohort_a,
+    related_group_a,
+    course_b,
+    semester_b,
+    cohort_b,
+    related_group_b
+):
 
+    # Same cohort and same semester
+    if (
+        cohort_a == cohort_b
+        and semester_a == semester_b
+    ):
+        return True
+
+    # Same related course group
+    if (
+        related_group_a
+        and related_group_b
+        and related_group_a == related_group_b
+    ):
+        return True
+
+    # Explicitly defined conflict
+    pair = frozenset(
+        [
+            course_a,
+            course_b
+        ]
+    )
+
+    if pair in conflict_pairs:
+        return True
+
+    return False
+    
         # Same cohort and same semester
         if (
             cohort_a == cohort_b
@@ -338,6 +373,10 @@ if st.button(
         course = row["Course"]
         semester = row["Semester"]
         cohort = row["Cohort"]
+related_group = str(
+    row["Related Group"]
+).strip()
+        
 
         # Prefer less busy days and slots
         ordered_slots = sorted(
