@@ -51,6 +51,14 @@ default_courses = pd.DataFrame(
             "1404",
             "1404",
             "1403"
+        ],
+        "Related Group": [
+            "Physics",
+            "Mathematics",
+            "Programming",
+            "Physics",
+            "Mathematics",
+            "Programming"
         ]
     }
 )
