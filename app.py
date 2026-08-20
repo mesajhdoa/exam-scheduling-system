@@ -894,31 +894,43 @@ if df is not None:
                     hide_index=True
                 )
 
-                valid_results = (
-                    comparison_df[
-                        comparison_df[
-                            "Valid"
-                        ]
-                        == "Yes"
-                    ]
-                )
+                heuristic_results = comparison_df[
+                    (
+                        comparison_df["Valid"] == "Yes"
+                    )
+                    & (
+                        comparison_df["Algorithm"]
+                        != "Exact CP-SAT"
+                    )
+                ]
 
-                if not valid_results.empty:
+                if not heuristic_results.empty:
 
-                    best_result = (
-                        valid_results.iloc[0]
+                    best_heuristic = (
+                        heuristic_results.iloc[0]
                     )
 
-                    best_col1, best_col2 = (
-                        st.columns(2)
+                    best_col1, best_col2, best_col3 = (
+                        st.columns(3)
                     )
 
                     best_col1.metric(
-                        "Best Algorithm",
-                        best_result[
-                            "Algorithm"
-                        ]
+                        "Best Heuristic",
+                        best_heuristic["Algorithm"]
                     )
+
+                    if exact_info["cost"] is not None:
+
+                        best_col2.metric(
+                            "Optimal Cost",
+                            int(exact_info["cost"])
+                        )
+
+                    best_col3.metric(
+                        "Exact Solver Status",
+                        exact_info["status"]
+                    )
+                
 
                     best_col2.metric(
                         "Best Cost",
