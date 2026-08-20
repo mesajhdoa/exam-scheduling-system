@@ -146,6 +146,14 @@ times = st.multiselect(
         "13:00"
     ]
 )
+max_classes_per_day = st.number_input(
+    "Maximum Classes per Day",
+    min_value=1,
+    max_value=20,
+    value=3,
+    step=1
+)
+
 
 
 # --------------------------------------------------
@@ -377,7 +385,9 @@ if st.button(
 
             day = slot["day"]
             class_time = slot["time"]
-
+if day_load[day] >= max_classes_per_day:
+    continue
+            
             slot_key = (
                 day,
                 class_time
