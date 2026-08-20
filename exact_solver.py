@@ -15,7 +15,7 @@ def exact_cp_sat(
         + consecutive_exam_penalty
 
     Returns:
-        schedule, info
+        schedule, info 
     """
 
     courses = list(graph.keys())
