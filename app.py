@@ -932,9 +932,6 @@ if df is not None:
                     )
                 
 
-                    best_col2.metric(
-                        "Best Cost",
-                    )
 
                 st.subheader(
                     "Cost Comparison"
