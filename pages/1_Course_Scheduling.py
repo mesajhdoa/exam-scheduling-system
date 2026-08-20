@@ -11,57 +11,58 @@ st.set_page_config(
 st.title("📚 Course Scheduling")
 
 st.write(
-    "Plan courses for the new semester and reduce scheduling conflicts."
+    "Plan courses for a new semester and avoid timetable conflicts."
 )
 
 
 # --------------------------------------------------
-# Course Input
+# 1. Course Data
 # --------------------------------------------------
 
 st.subheader("1. Courses Offered")
 
-default_courses = pd.DataFrame(
+default_data = pd.DataFrame(
     {
         "Course": [
             "Physics 1",
-            "Physics 2",
             "Mathematics 1",
-            "Mathematics 2",
             "Programming",
+            "Physics 2",
+            "Mathematics 2",
             "Data Structures"
         ],
         "Semester": [
             1,
-            2,
+            1,
             1,
             2,
-            1,
+            2,
             3
         ],
         "Cohort": [
             "1405",
-            "1404",
+            "1405",
             "1405",
             "1404",
-            "1405",
+            "1404",
             "1403"
         ]
     }
 )
 
 course_df = st.data_editor(
-    default_courses,
+    default_data,
     num_rows="dynamic",
-    use_container_width=True
+    use_container_width=True,
+    hide_index=True
 )
 
 
 # --------------------------------------------------
-# Weekly Settings
+# 2. Available Days and Times
 # --------------------------------------------------
 
-st.subheader("2. Weekly Schedule Settings")
+st.subheader("2. Available Days and Times")
 
 days = st.multiselect(
     "Teaching Days",
@@ -99,7 +100,7 @@ times = st.multiselect(
 
 
 # --------------------------------------------------
-# Generate
+# 3. Generate Schedule
 # --------------------------------------------------
 
 st.subheader("3. Generate Course Schedule")
@@ -109,28 +110,14 @@ if st.button(
     type="primary"
 ):
 
-    if course_df.empty:
-
-        st.error(
-            "Please enter at least one course."
-        )
-
-        st.stop()
-
     if not days or not times:
-
         st.error(
             "Please select at least one day and one class time."
         )
-
         st.stop()
 
     course_df = course_df.dropna(
-        subset=[
-            "Course",
-            "Semester",
-            "Cohort"
-        ]
+        subset=["Course", "Semester", "Cohort"]
     ).copy()
 
     course_df["Course"] = (
@@ -139,19 +126,35 @@ if st.button(
         .str.strip()
     )
 
+    course_df = course_df[
+        course_df["Course"] != ""
+    ]
+
+    if course_df.empty:
+        st.error(
+            "Please enter at least one course."
+        )
+        st.stop()
+
+
+    # ----------------------------------------------
+    # Scheduling
+    # ----------------------------------------------
+
     schedule_rows = []
 
-    used_slots = {}
+    # Each slot stores the groups already using it.
+    slot_groups = {}
 
     for _, row in course_df.iterrows():
 
         course = row["Course"]
-        semester = row["Semester"]
-        cohort = row["Cohort"]
+        semester = str(row["Semester"])
+        cohort = str(row["Cohort"])
 
-        conflict_group = (
-            str(cohort),
-            str(semester)
+        group = (
+            cohort,
+            semester
         )
 
         assigned = False
@@ -165,16 +168,12 @@ if st.button(
                     class_time
                 )
 
-                if slot not in used_slots:
+                if slot not in slot_groups:
+                    slot_groups[slot] = set()
 
-                    used_slots[slot] = []
-
-                existing_groups = [
-                    item["group"]
-                    for item in used_slots[slot]
-                ]
-
-                if conflict_group not in existing_groups:
+                # Courses belonging to the same cohort
+                # and semester cannot be at the same time.
+                if group not in slot_groups[slot]:
 
                     schedule_rows.append(
                         {
@@ -186,15 +185,11 @@ if st.button(
                         }
                     )
 
-                    used_slots[slot].append(
-                        {
-                            "course": course,
-                            "group": conflict_group
-                        }
+                    slot_groups[slot].add(
+                        group
                     )
 
                     assigned = True
-
                     break
 
             if assigned:
@@ -214,16 +209,14 @@ if st.button(
 
 
     # --------------------------------------------------
-    # Results
+    # 4. Results
     # --------------------------------------------------
 
     schedule_df = pd.DataFrame(
         schedule_rows
     )
 
-    st.subheader(
-        "4. Course Schedule"
-    )
+    st.subheader("4. Course Schedule")
 
     st.dataframe(
         schedule_df,
@@ -233,12 +226,11 @@ if st.button(
 
 
     # --------------------------------------------------
-    # Conflict Check
+    # 5. Validation
     # --------------------------------------------------
 
     unscheduled = schedule_df[
-        schedule_df["Day"]
-        == "No Slot"
+        schedule_df["Day"] == "No Slot"
     ]
 
     if unscheduled.empty:
@@ -255,12 +247,10 @@ if st.button(
 
 
     # --------------------------------------------------
-    # Weekly View
+    # 6. Weekly View
     # --------------------------------------------------
 
-    st.subheader(
-        "5. Weekly View"
-    )
+    st.subheader("5. Weekly View")
 
     for day in days:
 
@@ -268,50 +258,50 @@ if st.button(
             f"### {day}"
         )
 
-        day_data = schedule_df[
-            schedule_df["Day"]
-            == day
+        day_df = schedule_df[
+            schedule_df["Day"] == day
         ]
 
-        for class_time in times:
+        if day_df.empty:
 
-            exams = day_data[
-                day_data["Time"]
-                == class_time
-            ]
+            st.caption(
+                "No classes"
+            )
 
-            if not exams.empty:
+        else:
 
-                st.markdown(
-                    f"**{class_time}**"
-                )
+            for class_time in times:
 
-                for _, course_row in exams.iterrows():
+                time_df = day_df[
+                    day_df["Time"] == class_time
+                ]
 
-                    st.info(
-                        f"**{course_row['Course']}**\n\n"
-                        f"Semester: {course_row['Semester']}\n\n"
-                        f"Cohort: {course_row['Cohort']}"
+                if not time_df.empty:
+
+                    st.markdown(
+                        f"**{class_time}**"
                     )
+
+                    for _, item in time_df.iterrows():
+
+                        st.info(
+                            f"**{item['Course']}**\n\n"
+                            f"Semester: {item['Semester']}\n\n"
+                            f"Cohort: {item['Cohort']}"
+                        )
 
 
     # --------------------------------------------------
     # Download
     # --------------------------------------------------
 
-    csv_output = (
-        schedule_df
-        .to_csv(
-            index=False
-        )
-        .encode(
-            "utf-8"
-        )
-    )
+    csv_output = schedule_df.to_csv(
+        index=False
+    ).encode("utf-8")
 
     st.download_button(
         "Download Course Schedule",
         csv_output,
         "course_schedule.csv",
         "text/csv"
-    )ر
+    )
