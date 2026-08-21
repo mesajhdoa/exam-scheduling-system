@@ -6,14 +6,22 @@ def exact_cp_sat(
     students,
     slot_weight=10,
     time_limit=30,
-    period_hard_constraints=None
+    period_hard_constraints=None,
+    rooms=None,
+    course_sizes=None,
+    room_hard_constraints=None
 ):
     """
     Solve the exam scheduling problem using Google OR-Tools CP-SAT.
 
     Supports:
     - student conflict constraints
-    - ITC2007 EXCLUSION constraints
+    - ITC2007 EXCLUSION
+    - ITC2007 EXAM_COINCIDENCE
+    - ITC2007 AFTER
+    - room assignment
+    - room capacity
+    - ROOM_EXCLUSIVE
     """
 
     if not graph:
@@ -24,13 +32,13 @@ def exact_cp_sat(
             "slots": 0,
             "penalty": 0,
             "runtime": 0,
-            "best_bound": 0
+            "best_bound": 0,
+            "room_assignment": {}
         }
 
     model = cp_model.CpModel()
 
     courses = list(graph.keys())
-
     number_of_courses = len(courses)
 
     # --------------------------------------------------
@@ -45,7 +53,6 @@ def exact_cp_sat(
         )
         for course in courses
     }
-
 
     # --------------------------------------------------
     # Student Conflict Constraints
@@ -73,10 +80,8 @@ def exact_cp_sat(
 
             model.Add(
                 slot[course_a]
-                !=
-                slot[course_b]
+                != slot[course_b]
             )
-
 
     # --------------------------------------------------
     # ITC2007 Period Hard Constraints
@@ -100,40 +105,271 @@ def exact_cp_sat(
             ):
                 continue
 
-            if (
-                constraint["constraint"]
-                == "EXCLUSION"
-            ):
+            constraint_type = constraint[
+                "constraint"
+            ]
+
+            if constraint_type == "EXCLUSION":
 
                 model.Add(
                     slot[exam_a]
-                    !=
-                    slot[exam_b]
+                    != slot[exam_b]
                 )
 
-            elif (
-                constraint["constraint"]
-                == "EXAM_COINCIDENCE"
-            ):
+            elif constraint_type == "EXAM_COINCIDENCE":
 
                 model.Add(
                     slot[exam_a]
-                    ==
-                    slot[exam_b]
+                    == slot[exam_b]
                 )
-            elif (
-                constraint["constraint"]
-                == "AFTER"
-            ):
+
+            elif constraint_type == "AFTER":
 
                 model.Add(
                     slot[exam_a]
-                    >
-                    slot[exam_b]
+                    > slot[exam_b]
                 )
 
-    
-    
+    # --------------------------------------------------
+    # Room Assignment
+    # --------------------------------------------------
+
+    room_use = None
+    occupancy = None
+
+    room_data_available = (
+        rooms is not None
+        and course_sizes is not None
+        and len(rooms) > 0
+    )
+
+    if room_data_available:
+
+        number_of_rooms = len(rooms)
+
+        # Each exam must use exactly one room.
+
+        room_use = {}
+
+        for course in courses:
+
+            room_variables = []
+
+            for room_id in range(
+                number_of_rooms
+            ):
+
+                variable = model.NewBoolVar(
+                    f"room_{course}_{room_id}"
+                )
+
+                room_use[
+                    course,
+                    room_id
+                ] = variable
+
+                room_variables.append(
+                    variable
+                )
+
+            model.AddExactlyOne(
+                room_variables
+            )
+
+        # --------------------------------------------------
+        # Slot Indicator Variables
+        # --------------------------------------------------
+
+        slot_is = {}
+
+        for course in courses:
+
+            for period in range(
+                1,
+                number_of_courses + 1
+            ):
+
+                variable = model.NewBoolVar(
+                    f"is_slot_{course}_{period}"
+                )
+
+                slot_is[
+                    course,
+                    period
+                ] = variable
+
+                model.Add(
+                    slot[course] == period
+                ).OnlyEnforceIf(
+                    variable
+                )
+
+                model.Add(
+                    slot[course] != period
+                ).OnlyEnforceIf(
+                    variable.Not()
+                )
+
+        # --------------------------------------------------
+        # Room + Slot Occupancy Variables
+        # --------------------------------------------------
+
+        occupancy = {}
+
+        for course in courses:
+
+            for room_id in range(
+                number_of_rooms
+            ):
+
+                for period in range(
+                    1,
+                    number_of_courses + 1
+                ):
+
+                    variable = model.NewBoolVar(
+                        (
+                            f"occupancy_"
+                            f"{course}_"
+                            f"{room_id}_"
+                            f"{period}"
+                        )
+                    )
+
+                    occupancy[
+                        course,
+                        room_id,
+                        period
+                    ] = variable
+
+                    slot_variable = slot_is[
+                        course,
+                        period
+                    ]
+
+                    room_variable = room_use[
+                        course,
+                        room_id
+                    ]
+
+                    # occupancy =
+                    # slot_is AND room_use
+
+                    model.Add(
+                        variable
+                        <= slot_variable
+                    )
+
+                    model.Add(
+                        variable
+                        <= room_variable
+                    )
+
+                    model.Add(
+                        variable
+                        >= (
+                            slot_variable
+                            + room_variable
+                            - 1
+                        )
+                    )
+
+        # --------------------------------------------------
+        # Room Capacity
+        # --------------------------------------------------
+
+        for room_id, room_info in enumerate(
+            rooms
+        ):
+
+            capacity = int(
+                room_info["capacity"]
+            )
+
+            for period in range(
+                1,
+                number_of_courses + 1
+            ):
+
+                model.Add(
+                    sum(
+                        int(
+                            course_sizes.get(
+                                course,
+                                0
+                            )
+                        )
+                        * occupancy[
+                            course,
+                            room_id,
+                            period
+                        ]
+                        for course in courses
+                    )
+                    <= capacity
+                )
+
+        # --------------------------------------------------
+        # ROOM_EXCLUSIVE
+        # --------------------------------------------------
+
+        if room_hard_constraints is not None:
+
+            exclusive_courses = set()
+
+            for constraint in (
+                room_hard_constraints
+            ):
+
+                if (
+                    constraint["constraint"]
+                    == "ROOM_EXCLUSIVE"
+                ):
+
+                    exam_name = (
+                        f"Exam {constraint['exam_id']}"
+                    )
+
+                    if exam_name in slot:
+                        exclusive_courses.add(
+                            exam_name
+                        )
+
+            for exclusive_course in (
+                exclusive_courses
+            ):
+
+                for room_id in range(
+                    number_of_rooms
+                ):
+
+                    for period in range(
+                        1,
+                        number_of_courses + 1
+                    ):
+
+                        exclusive_occupancy = (
+                            occupancy[
+                                exclusive_course,
+                                room_id,
+                                period
+                            ]
+                        )
+
+                        model.Add(
+                            sum(
+                                occupancy[
+                                    course,
+                                    room_id,
+                                    period
+                                ]
+                                for course in courses
+                            )
+                            <= 1
+                        ).OnlyEnforceIf(
+                            exclusive_occupancy
+                        )
+
     # --------------------------------------------------
     # Maximum Slot
     # --------------------------------------------------
@@ -148,7 +384,6 @@ def exact_cp_sat(
         max_slot,
         list(slot.values())
     )
-
 
     # --------------------------------------------------
     # Remove Shifted Equivalent Solutions
@@ -169,16 +404,19 @@ def exact_cp_sat(
         min_slot == 1
     )
 
-
     # --------------------------------------------------
     # Consecutive Exam Penalty
     # --------------------------------------------------
 
     penalty_variables = []
 
-    for student_id, course_list in students.items():
+    for student_id, course_list in (
+        students.items()
+    ):
 
-        for i in range(len(course_list)):
+        for i in range(
+            len(course_list)
+        ):
 
             for j in range(
                 i + 1,
@@ -236,7 +474,6 @@ def exact_cp_sat(
                     consecutive
                 )
 
-
     # --------------------------------------------------
     # Objective
     # --------------------------------------------------
@@ -250,7 +487,6 @@ def exact_cp_sat(
         + total_penalty
     )
 
-
     # --------------------------------------------------
     # Solver
     # --------------------------------------------------
@@ -262,17 +498,17 @@ def exact_cp_sat(
     )
 
     solver.parameters.num_search_workers = 1
-
     solver.parameters.random_seed = 42
 
     status = solver.Solve(model)
-
 
     # --------------------------------------------------
     # Status
     # --------------------------------------------------
 
-    status_name = solver.StatusName(status)
+    status_name = solver.StatusName(
+        status
+    )
 
     if status not in (
         cp_model.OPTIMAL,
@@ -288,12 +524,12 @@ def exact_cp_sat(
             "runtime": solver.WallTime(),
             "best_bound": (
                 solver.BestObjectiveBound()
-            )
+            ),
+            "room_assignment": None
         }
 
-
     # --------------------------------------------------
-    # Extract Solution
+    # Extract Schedule
     # --------------------------------------------------
 
     schedule = {
@@ -302,6 +538,39 @@ def exact_cp_sat(
         )
         for course in courses
     }
+
+    # --------------------------------------------------
+    # Extract Room Assignment
+    # --------------------------------------------------
+
+    room_assignment = {}
+
+    if room_use is not None:
+
+        number_of_rooms = len(rooms)
+
+        for course in courses:
+
+            for room_id in range(
+                number_of_rooms
+            ):
+
+                if solver.Value(
+                    room_use[
+                        course,
+                        room_id
+                    ]
+                ):
+
+                    room_assignment[
+                        course
+                    ] = room_id
+
+                    break
+
+    # --------------------------------------------------
+    # Final Metrics
+    # --------------------------------------------------
 
     used_slots = max(
         schedule.values()
@@ -317,7 +586,6 @@ def exact_cp_sat(
         + penalty_value
     )
 
-
     return schedule, {
         "status": status_name,
         "optimal": (
@@ -329,5 +597,8 @@ def exact_cp_sat(
         "runtime": solver.WallTime(),
         "best_bound": (
             solver.BestObjectiveBound()
+        ),
+        "room_assignment": (
+            room_assignment
         )
     }
