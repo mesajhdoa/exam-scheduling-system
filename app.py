@@ -996,9 +996,20 @@ if df is not None:
                         benchmark_data["period_hard_constraints"]
                         if benchmark_data is not None
                         else None
+                    ),
+                    rooms=(
+                        benchmark_data["rooms"]
+                        if benchmark_data is not None
+                        else None
+                    ),
+                    course_sizes=course_sizes,
+                    room_hard_constraints=(
+                        benchmark_data["room_hard_constraints"]
+                        if benchmark_data is not None
+                        else None
                     )
                 )
-
+                
                 exact_optimal = (
                     exact_info["optimal"]
                     and exact_info["cost"] is not None
