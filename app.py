@@ -931,7 +931,8 @@ if df is not None:
                     runtime_ms = (
                         end_time - start_time
                     ) * 1000
-result_valid = (
+
+                    result_valid = (
     validate_schedule(
         graph,
         result_schedule
@@ -944,7 +945,6 @@ result_valid = (
         )
     )
 )
-                    
                     result_penalty = (
                         consecutive_exam_penalty(
                             students,
