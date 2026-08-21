@@ -396,6 +396,8 @@ if df is not None:
                 .to_dict()
             )
 
+from scheduler_core import build_conflict_graph
+
 graph = build_conflict_graph(students)
 
 # --------------------------------------------------
