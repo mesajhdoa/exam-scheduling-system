@@ -121,8 +121,18 @@ def exact_cp_sat(
                     ==
                     slot[exam_b]
                 )
+            elif (
+                constraint["constraint"]
+                == "AFTER"
+            ):
 
+                model.Add(
+                    slot[exam_a]
+                    >
+                    slot[exam_b]
+                )
 
+    
     
     # --------------------------------------------------
     # Maximum Slot
