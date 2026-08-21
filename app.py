@@ -741,6 +741,67 @@ if df is not None:
                     hide_index=True
                 )
 
+                # ----------------------------------
+                # Exact CP-SAT Room Assignment
+                # ----------------------------------
+
+                if (
+                    benchmark_data is not None
+                    and exact_schedule is not None
+                    and exact_info.get("room_assignment")
+                ):
+
+                    st.subheader(
+                        "Exact CP-SAT Room Assignment"
+                    )
+
+                    room_rows = []
+
+                    for course, slot_number in sorted(
+                        exact_schedule.items(),
+                        key=lambda item: (
+                            item[1],
+                            item[0]
+                        )
+                    ):
+
+                        room_id = exact_info[
+                            "room_assignment"
+                        ].get(course)
+
+                        if room_id is None:
+                            continue
+
+                        room_info = benchmark_data[
+                            "rooms"
+                        ][room_id]
+
+                        room_rows.append(
+                            {
+                                "Exam": course,
+                                "Slot": slot_number,
+                                "Students": course_sizes.get(
+                                    course,
+                                    0
+                                ),
+                                "Room": f"Room {room_id + 1}",
+                                "Room Capacity": room_info[
+                                    "capacity"
+                                ]
+                            }
+                        )
+
+                    room_df = pd.DataFrame(
+                        room_rows
+                    )
+
+                    st.dataframe(
+                        room_df,
+                        use_container_width=True,
+                        hide_index=True
+                    )
+                
+                
 
                 # ----------------------------------
                 # Visual Calendar
