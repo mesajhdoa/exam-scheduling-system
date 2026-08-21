@@ -79,38 +79,51 @@ def exact_cp_sat(
 
 
     # --------------------------------------------------
-    # ITC2007 EXCLUSION Constraints
+    # ITC2007 Period Hard Constraints
     # --------------------------------------------------
 
     if period_hard_constraints is not None:
 
         for constraint in period_hard_constraints:
 
+            exam_a = (
+                f"Exam {constraint['exam_a']}"
+            )
+
+            exam_b = (
+                f"Exam {constraint['exam_b']}"
+            )
+
+            if (
+                exam_a not in slot
+                or exam_b not in slot
+            ):
+                continue
+
             if (
                 constraint["constraint"]
                 == "EXCLUSION"
             ):
 
-                exam_a = (
-                    f"Exam {constraint['exam_a']}"
+                model.Add(
+                    slot[exam_a]
+                    !=
+                    slot[exam_b]
                 )
 
-                exam_b = (
-                    f"Exam {constraint['exam_b']}"
+            elif (
+                constraint["constraint"]
+                == "EXAM_COINCIDENCE"
+            ):
+
+                model.Add(
+                    slot[exam_a]
+                    ==
+                    slot[exam_b]
                 )
 
-                if (
-                    exam_a in slot
-                    and exam_b in slot
-                ):
 
-                    model.Add(
-                        slot[exam_a]
-                        !=
-                        slot[exam_b]
-                    )
-
-
+    
     # --------------------------------------------------
     # Maximum Slot
     # --------------------------------------------------
