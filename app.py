@@ -936,13 +936,20 @@ if df is not None:
                 # Exact CP-SAT
                 # ----------------------------------
 
-                exact_schedule, exact_info = exact_cp_sat(
-                    graph,
-                    students,
-                    slot_weight,
-                    time_limit=30
-                )
+exact_schedule, exact_info = exact_cp_sat(
+    graph,
+    students,
+    slot_weight,
+    time_limit=30,
+    period_hard_constraints=(
+        benchmark_data["period_hard_constraints"]
+        if benchmark_data is not None
+        else None
+    )
+)
 
+
+                
                 exact_optimal = (
                     exact_info["optimal"]
                     and exact_info["cost"] is not None
