@@ -1001,6 +1001,20 @@ if df is not None:
                 
                 if exact_schedule is not None:
 
+                    exact_valid = (
+                        validate_schedule(
+                            graph,
+                            exact_schedule
+                        )
+                        and (
+                            benchmark_data is None
+                            or validate_itc2007_period_constraints(
+                                exact_schedule,
+                                benchmark_data["period_hard_constraints"]
+                            )
+                        )
+                    )
+
                     comparison_rows.append(
                         {
                             "Algorithm": "Exact CP-SAT",
@@ -1011,16 +1025,10 @@ if df is not None:
                                 exact_info["runtime"] * 1000,
                                 3
                             ),
-                            "Valid": (
-                                "Yes"
-                                if validate_schedule(
-                                    graph,
-                                    exact_schedule
-                                )
-                                else "No"
-                            )
+                            "Valid": "Yes" if exact_valid else "No"
                         }
                     )
+                
                 
                 comparison_df = pd.DataFrame(
                     comparison_rows
