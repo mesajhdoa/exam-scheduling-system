@@ -387,7 +387,7 @@ if st.button(
             day = slot["day"]
             class_time = slot["time"]
             if day_load[day] >= max_classes_per_day:
-            continue
+                continue
             
             slot_key = (
                 day,
