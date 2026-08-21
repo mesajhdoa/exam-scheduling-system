@@ -974,24 +974,14 @@ if df is not None:
                                 runtime_ms,
                                 3
                             ),
-
                             "Valid": (
-    "Yes"
-    if (
-        validate_schedule(
-            graph,
-            exact_schedule
-        )
-        and (
-            benchmark_data is None
-            or validate_itc2007_period_constraints(
-                exact_schedule,
-                benchmark_data["period_hard_constraints"]
-            )
-        )
-    )
-    else "No"
-)
+                                "Yes"
+                                if result_valid
+                                else "No"
+                            )
+                        }
+                    )
+                
                 # ----------------------------------
                 # Exact CP-SAT
                 # ----------------------------------
