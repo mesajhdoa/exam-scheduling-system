@@ -59,6 +59,11 @@ def validate_itc2007_period_constraints(
 
             if schedule[exam_a] != schedule[exam_b]:
                 return False
+        elif constraint_type == "AFTER":
+
+            if schedule[exam_a] <= schedule[exam_b]:
+                return False
+    
 
     return True
 
