@@ -931,14 +931,20 @@ if df is not None:
                     runtime_ms = (
                         end_time - start_time
                     ) * 1000
-
-                    result_valid = (
-                        validate_schedule(
-                            graph,
-                            result_schedule
-                        )
-                    )
-
+result_valid = (
+    validate_schedule(
+        graph,
+        result_schedule
+    )
+    and (
+        benchmark_data is None
+        or validate_itc2007_period_constraints(
+            result_schedule,
+            benchmark_data["period_hard_constraints"]
+        )
+    )
+)
+                    
                     result_penalty = (
                         consecutive_exam_penalty(
                             students,
