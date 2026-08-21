@@ -1034,12 +1034,17 @@ if df is not None:
                         best_heuristic["Algorithm"]
                     )
 
-                    if exact_info["cost"] is not None:
+if exact_info["cost"] is not None:
 
-                        best_col2.metric(
-                            "Optimal Cost",
-                            int(exact_info["cost"])
-                        )
+    best_col2.metric(
+        (
+            "Optimal Cost"
+            if exact_info["optimal"]
+            else "Exact Feasible Cost"
+        ),
+        int(exact_info["cost"])
+    )
+                    
 
                     best_col3.metric(
                         "Exact Solver Status",
