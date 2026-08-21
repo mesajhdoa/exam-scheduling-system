@@ -966,34 +966,18 @@ if df is not None:
 
                     comparison_rows.append(
                         {
-                            "Algorithm": method,
-                            "Slots": result_slots,
-                            "Penalty": result_penalty,
-                            "Cost": result_cost,
+                            "Algorithm": "Exact CP-SAT",
+                            "Slots": exact_info["slots"],
+                            "Penalty": exact_info["penalty"],
+                            "Cost": exact_info["cost"],
                             "Runtime (ms)": round(
-                                runtime_ms,
+                                exact_info["runtime"] * 1000,
                                 3
                             ),
-
-"Valid": (
-    "Yes"
-    if (
-        validate_schedule(
-            graph,
-            exact_schedule
-        )
-        and (
-            benchmark_data is None
-            or validate_itc2007_period_constraints(
-                exact_schedule,
-                benchmark_data["period_hard_constraints"]
-            )
-        )
-    )
-    else "No"
-)
+                            "Valid": "Yes" if exact_valid else "No"
+                        }
+                    )
                             
-                
                 # ----------------------------------
                 # Exact CP-SAT
                 # ----------------------------------
