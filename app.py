@@ -396,40 +396,36 @@ if df is not None:
                 .to_dict()
             )
 
-from scheduler_core import build_conflict_graph
+            graph = build_conflict_graph(students)
 
-graph = build_conflict_graph(students)
+            # --------------------------------------
+            # ITC2007 EXCLUSION Constraints
+            # --------------------------------------
 
-# --------------------------------------------------
-# ITC2007 EXCLUSION Constraints
-# Add them as extra conflict-graph edges so that
-# every scheduling algorithm respects them.
-# --------------------------------------------------
+            if benchmark_data is not None:
 
-if benchmark_data is not None:
+                for constraint in benchmark_data[
+                    "period_hard_constraints"
+                ]:
 
-    for constraint in benchmark_data[
-        "period_hard_constraints"
-    ]:
+                    if constraint["constraint"] == "EXCLUSION":
 
-        if constraint["constraint"] == "EXCLUSION":
+                        exam_a = f"Exam {constraint['exam_a']}"
+                        exam_b = f"Exam {constraint['exam_b']}"
 
-            exam_a = f"Exam {constraint['exam_a']}"
-            exam_b = f"Exam {constraint['exam_b']}"
+                        if (
+                            exam_a in graph
+                            and exam_b in graph
+                        ):
+                            graph[exam_a].add(exam_b)
+                            graph[exam_b].add(exam_a)
 
-            if (
-                exam_a in graph
-                and exam_b in graph
-            ):
-                graph[exam_a].add(exam_b)
-                graph[exam_b].add(exam_a)
-            
             course_sizes = (
                 df.groupby("Course")["Student_ID"]
                 .nunique()
                 .to_dict()
             )
-
+            
 
             # --------------------------------------
             # Dataset Information
