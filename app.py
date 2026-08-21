@@ -1038,18 +1038,28 @@ if df is not None:
                 comparison_df = pd.DataFrame(
                     comparison_rows
                 )
+
                 if exact_optimal:
 
                     optimal_cost = exact_info["cost"]
 
-                    comparison_df["Gap (%)"] = (
-                        (
-                            comparison_df["Cost"]
-                            - optimal_cost
-                        )
-                        / optimal_cost
-                        * 100
-                    ).round(2)
+                    comparison_df["Gap (%)"] = comparison_df.apply(
+                        lambda row: (
+                            round(
+                                (
+                                    row["Cost"]
+                                    - optimal_cost
+                                )
+                                / optimal_cost
+                                * 100,
+                                2
+                            )
+                            if row["Valid"] == "Yes"
+                            else "N/A"
+                        ),
+                        axis=1
+                    )
+            
 
                 else:
 
