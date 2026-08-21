@@ -17,6 +17,7 @@ from scheduler_core import (
     total_cost
 )
 from exact_solver import exact_cp_sat
+from benchmark_loader import load_itc2007_exam
 
 # --------------------------------------------------
 # Page Settings
@@ -89,12 +90,14 @@ input_method = st.radio(
     [
         "Manual Entry",
         "Upload CSV",
-        "Quick Demo"
+        "Quick Demo",
+        "ITC2007 Benchmark"
     ],
     horizontal=True
 )
 
 df = None
+benchmark_data = None
 
 
 # --------------------------------------------------
@@ -140,15 +143,14 @@ elif input_method == "Upload CSV":
     )
 
     if uploaded_file is not None:
-
         df = pd.read_csv(uploaded_file)
 
 
 # --------------------------------------------------
-# Quick Demo Generator
+# Quick Demo
 # --------------------------------------------------
 
-else:
+elif input_method == "Quick Demo":
 
     st.write(
         "Create a sample university dataset automatically."
@@ -191,7 +193,10 @@ else:
 
     course_names = [
         f"Course {i}"
-        for i in range(1, int(number_of_courses) + 1)
+        for i in range(
+            1,
+            int(number_of_courses) + 1
+        )
     ]
 
     demo_rows = []
@@ -220,6 +225,94 @@ else:
     st.success(
         "Demo dataset generated automatically."
     )
+
+
+# --------------------------------------------------
+# ITC2007 Benchmark
+# --------------------------------------------------
+
+else:
+
+    st.write(
+        "Upload an ITC2007 Examination Timetabling "
+        "benchmark instance."
+    )
+
+    benchmark_file = st.file_uploader(
+        "Choose ITC2007 .exam file",
+        type=["exam"]
+    )
+
+    if benchmark_file is not None:
+
+        try:
+
+            benchmark_data = load_itc2007_exam(
+                benchmark_file
+            )
+
+            benchmark_rows = []
+
+            for student_id, exams in (
+                benchmark_data["students"].items()
+            ):
+
+                for exam in exams:
+
+                    benchmark_rows.append(
+                        {
+                            "Student_ID": student_id,
+                            "Course": exam
+                        }
+                    )
+
+            df = pd.DataFrame(
+                benchmark_rows
+            )
+
+            metadata = benchmark_data[
+                "metadata"
+            ]
+
+            st.success(
+                "ITC2007 benchmark loaded successfully."
+            )
+
+            b1, b2, b3, b4 = st.columns(4)
+
+            b1.metric(
+                "Exams",
+                metadata["exam_count"]
+            )
+
+            b2.metric(
+                "Students",
+                metadata["student_count"]
+            )
+
+            b3.metric(
+                "Enrollments",
+                metadata["enrollment_count"]
+            )
+
+            b4.metric(
+                "Periods",
+                metadata["period_count"]
+            )
+
+            st.info(
+                "Benchmark mode currently evaluates the "
+                "student conflict graph with the project's "
+                "existing scheduling objective. Full ITC2007 "
+                "room and hard-constraint optimization will "
+                "be integrated separately."
+            )
+
+        except Exception as error:
+
+            st.error(
+                f"Could not read benchmark: {error}"
+            )
 
 
 # --------------------------------------------------
