@@ -19,6 +19,49 @@ from scheduler_core import (
 from exact_solver import exact_cp_sat
 from benchmark_loader import load_itc2007_exam
 
+def validate_itc2007_period_constraints(
+    schedule,
+    period_hard_constraints
+):
+    """
+    Validate supported ITC2007 period hard constraints.
+
+    Currently supports:
+    - EXCLUSION
+    - EXAM_COINCIDENCE
+    """
+
+    if schedule is None:
+        return False
+
+    if not period_hard_constraints:
+        return True
+
+    for constraint in period_hard_constraints:
+
+        exam_a = f"Exam {constraint['exam_a']}"
+        exam_b = f"Exam {constraint['exam_b']}"
+
+        if (
+            exam_a not in schedule
+            or exam_b not in schedule
+        ):
+            return False
+
+        constraint_type = constraint["constraint"]
+
+        if constraint_type == "EXCLUSION":
+
+            if schedule[exam_a] == schedule[exam_b]:
+                return False
+
+        elif constraint_type == "EXAM_COINCIDENCE":
+
+            if schedule[exam_a] != schedule[exam_b]:
+                return False
+
+    return True
+
 # --------------------------------------------------
 # Page Settings
 # --------------------------------------------------
