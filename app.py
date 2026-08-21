@@ -966,18 +966,18 @@ if df is not None:
 
                     comparison_rows.append(
                         {
-                            "Algorithm": "Exact CP-SAT",
-                            "Slots": exact_info["slots"],
-                            "Penalty": exact_info["penalty"],
-                            "Cost": exact_info["cost"],
+                            "Algorithm": method,
+                            "Slots": result_slots,
+                            "Penalty": result_penalty,
+                            "Cost": result_cost,
                             "Runtime (ms)": round(
-                                exact_info["runtime"] * 1000,
+                                runtime_ms,
                                 3
                             ),
-                            "Valid": "Yes" if exact_valid else "No"
+                            "Valid": "Yes" if result_valid else "No"
                         }
                     )
-                            
+                
                 # ----------------------------------
                 # Exact CP-SAT
                 # ----------------------------------
