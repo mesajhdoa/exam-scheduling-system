@@ -974,8 +974,7 @@ if df is not None:
                                 runtime_ms,
                                 3
                             ),
-
-                            "Valid": (
+"Valid": (
     "Yes"
     if (
         validate_schedule(
@@ -992,6 +991,7 @@ if df is not None:
     )
     else "No"
 )
+                            
                 # ----------------------------------
                 # Exact CP-SAT
                 # ----------------------------------
