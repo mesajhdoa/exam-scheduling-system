@@ -44,6 +44,18 @@ def exact_cp_sat(
 
     courses = list(graph.keys())
     number_of_courses = len(courses)
+
+    exam_duration = {}
+
+    if exams is not None:
+
+        exam_duration = {
+            exam["exam_name"]: int(
+                exam["duration"]
+            )
+            for exam in exams
+        }
+    
     number_of_periods = (
         len(periods)
         if periods is not None and len(periods) > 0
