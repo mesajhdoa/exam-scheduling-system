@@ -678,6 +678,98 @@ def exact_cp_sat(
                         two_in_a_day_weight
                         * two_in_a_day
                     )
+
+        # --------------------------------------------------
+        # ITC2007 PERIODSPREAD
+        # --------------------------------------------------
+
+        period_spread = int(
+            institutional_weightings.get(
+                "PERIODSPREAD",
+                0
+            )
+        )
+
+        if period_spread > 0:
+
+            spread_tuples = []
+
+            for period_a in range(
+                1,
+                number_of_periods + 1
+            ):
+
+                for period_b in range(
+                    1,
+                    number_of_periods + 1
+                ):
+
+                    is_spread_violation = (
+                        1
+                        if (
+                            0
+                            < abs(
+                                period_a
+                                - period_b
+                            )
+                            <= period_spread
+                        )
+                        else 0
+                    )
+
+                    spread_tuples.append(
+                        (
+                            period_a,
+                            period_b,
+                            is_spread_violation
+                        )
+                    )
+
+            for student_id, course_list in (
+                students.items()
+            ):
+
+                for i in range(
+                    len(course_list)
+                ):
+
+                    for j in range(
+                        i + 1,
+                        len(course_list)
+                    ):
+
+                        course_a = course_list[i]
+                        course_b = course_list[j]
+
+                        if (
+                            course_a not in slot
+                            or course_b not in slot
+                        ):
+                            continue
+
+                        spread_violation = (
+                            model.NewBoolVar(
+                                (
+                                    f"period_spread_"
+                                    f"{student_id}_"
+                                    f"{i}_"
+                                    f"{j}"
+                                )
+                            )
+                        )
+
+                        model.AddAllowedAssignments(
+                            [
+                                slot[course_a],
+                                slot[course_b],
+                                spread_violation
+                            ],
+                            spread_tuples
+                        )
+
+                        penalty_variables.append(
+                            spread_violation
+                        )
     
     # --------------------------------------------------
     # Original Project Penalty
