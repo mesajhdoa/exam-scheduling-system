@@ -1003,6 +1003,53 @@ def exact_cp_sat(
                             room_id
                         ]
                     )
+
+        # --------------------------------------------------
+        # ITC2007 PERIOD PENALTY
+        # --------------------------------------------------
+
+        if periods is not None:
+
+            for course in courses:
+
+                for period_number, period_info in enumerate(
+                    periods,
+                    start=1
+                ):
+
+                    period_penalty = int(
+                        period_info["penalty"]
+                    )
+
+                    if period_penalty == 0:
+                        continue
+
+                    uses_penalty_period = (
+                        model.NewBoolVar(
+                            (
+                                f"period_penalty_"
+                                f"{course}_"
+                                f"{period_number}"
+                            )
+                        )
+                    )
+
+                    model.Add(
+                        slot[course] == period_number
+                    ).OnlyEnforceIf(
+                        uses_penalty_period
+                    )
+
+                    model.Add(
+                        slot[course] != period_number
+                    ).OnlyEnforceIf(
+                        uses_penalty_period.Not()
+                    )
+
+                    penalty_variables.append(
+                        period_penalty
+                        * uses_penalty_period
+                    )
     
     # --------------------------------------------------
     # Original Project Penalty
