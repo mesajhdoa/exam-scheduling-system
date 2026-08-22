@@ -1201,8 +1201,6 @@ if df is not None:
                         else None
                     )
                 )
-                    
-                )
                 
                 exact_optimal = (
                     exact_info["optimal"]
