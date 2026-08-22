@@ -759,11 +759,19 @@ def exact_cp_sat(
         penalty_variables
     )
 
-    model.Minimize(
-        slot_weight * max_slot
-        + total_penalty
-    )
+    if institutional_weightings is not None:
 
+        model.Minimize(
+            total_penalty
+        )
+
+    else:
+
+        model.Minimize(
+            slot_weight * max_slot
+            + total_penalty
+        )
+    
     # --------------------------------------------------
     # Solver
     # --------------------------------------------------
