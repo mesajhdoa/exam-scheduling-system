@@ -1183,8 +1183,14 @@ if df is not None:
                         benchmark_data["room_hard_constraints"]
                         if benchmark_data is not None
                         else None
+                    ),
+                    periods=(
+                        benchmark_data["periods"]
+                        if benchmark_data is not None
+                        else None
                     )
                 )
+                
                 
                 exact_optimal = (
                     exact_info["optimal"]
