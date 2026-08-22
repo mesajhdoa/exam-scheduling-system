@@ -1205,7 +1205,18 @@ if df is not None:
                                 benchmark_data["period_hard_constraints"]
                             )
                         )
+                        and (
+                            benchmark_data is None
+                            or validate_itc2007_room_constraints(
+                                exact_schedule,
+                                exact_info["room_assignment"],
+                                benchmark_data["rooms"],
+                                course_sizes,
+                                benchmark_data["room_hard_constraints"]
+                            )
+                        )
                     )
+                    
 
                     comparison_rows.append(
                         {
