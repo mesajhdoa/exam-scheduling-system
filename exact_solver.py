@@ -9,7 +9,7 @@ def exact_cp_sat(
     period_hard_constraints=None,
     rooms=None,
     course_sizes=None,
-    room_hard_constraints=None
+    room_hard_constraints=None,
     periods=None
     
 ):
