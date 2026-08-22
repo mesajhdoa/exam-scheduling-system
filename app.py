@@ -1189,11 +1189,19 @@ if df is not None:
                         if benchmark_data is not None
                         else None
                     ),
+
                     institutional_weightings=(
                         benchmark_data["institutional_weightings"]
                         if benchmark_data is not None
                         else None
+                    ),
+                    exams=(
+                        benchmark_data["exams"]
+                        if benchmark_data is not None
+                        else None
                     )
+                )
+                    
                 )
                 
                 exact_optimal = (
