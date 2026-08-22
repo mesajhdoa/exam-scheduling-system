@@ -863,6 +863,116 @@ def exact_cp_sat(
                     frontload_penalty
                     * late_exam
                 )
+
+        # --------------------------------------------------
+        # ITC2007 NONMIXEDDURATIONS
+        # --------------------------------------------------
+
+        non_mixed_weight = int(
+            institutional_weightings.get(
+                "NONMIXEDDURATIONS",
+                0
+            )
+        )
+
+        if (
+            non_mixed_weight > 0
+            and room_use is not None
+            and occupancy is not None
+            and exam_duration
+        ):
+
+            distinct_durations = sorted(
+                set(
+                    exam_duration.values()
+                )
+            )
+
+            number_of_rooms = len(rooms)
+
+            for room_id in range(
+                number_of_rooms
+            ):
+
+                for period in range(
+                    1,
+                    number_of_periods + 1
+                ):
+
+                    room_period_occupancies = [
+                        occupancy[
+                            course,
+                            room_id,
+                            period
+                        ]
+                        for course in courses
+                    ]
+
+                    room_used = model.NewBoolVar(
+                        (
+                            f"room_used_"
+                            f"{room_id}_"
+                            f"{period}"
+                        )
+                    )
+
+                    model.AddMaxEquality(
+                        room_used,
+                        room_period_occupancies
+                    )
+
+                    duration_used_variables = []
+
+                    for duration in distinct_durations:
+
+                        matching_courses = [
+                            course
+                            for course in courses
+                            if exam_duration.get(
+                                course
+                            ) == duration
+                        ]
+
+                        if not matching_courses:
+                            continue
+
+                        duration_used = (
+                            model.NewBoolVar(
+                                (
+                                    f"duration_used_"
+                                    f"{room_id}_"
+                                    f"{period}_"
+                                    f"{duration}"
+                                )
+                            )
+                        )
+
+                        model.AddMaxEquality(
+                            duration_used,
+                            [
+                                occupancy[
+                                    course,
+                                    room_id,
+                                    period
+                                ]
+                                for course
+                                in matching_courses
+                            ]
+                        )
+
+                        duration_used_variables.append(
+                            duration_used
+                        )
+
+                    penalty_variables.append(
+                        non_mixed_weight
+                        * (
+                            sum(
+                                duration_used_variables
+                            )
+                            - room_used
+                        )
+                    )
     
     # --------------------------------------------------
     # Original Project Penalty
