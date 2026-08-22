@@ -866,11 +866,17 @@ def exact_cp_sat(
         for variable in penalty_variables
     )
 
-    cost_value = (
-        slot_weight * used_slots
-        + penalty_value
-    )
+    if institutional_weightings is not None:
 
+        cost_value = penalty_value
+
+    else:
+
+        cost_value = (
+            slot_weight * used_slots
+            + penalty_value
+        )
+    
     return schedule, {
         "status": status_name,
         "optimal": (
