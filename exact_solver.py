@@ -973,6 +973,36 @@ def exact_cp_sat(
                             - room_used
                         )
                     )
+
+        # --------------------------------------------------
+        # ITC2007 ROOM PENALTY
+        # --------------------------------------------------
+
+        if (
+            rooms is not None
+            and room_use is not None
+        ):
+
+            for room_id, room_info in enumerate(
+                rooms
+            ):
+
+                room_penalty = int(
+                    room_info["penalty"]
+                )
+
+                if room_penalty == 0:
+                    continue
+
+                for course in courses:
+
+                    penalty_variables.append(
+                        room_penalty
+                        * room_use[
+                            course,
+                            room_id
+                        ]
+                    )
     
     # --------------------------------------------------
     # Original Project Penalty
