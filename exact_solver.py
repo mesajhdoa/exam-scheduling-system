@@ -42,6 +42,13 @@ def exact_cp_sat(
 
     courses = list(graph.keys())
     number_of_courses = len(courses)
+    number_of_periods = (
+        len(periods)
+        if periods is not None and len(periods) > 0
+        else number_of_courses
+    )
+
+    
 
     # --------------------------------------------------
     # Slot Variables
@@ -50,7 +57,7 @@ def exact_cp_sat(
     slot = {
         course: model.NewIntVar(
             1,
-            number_of_courses,
+            number_of_periods,
             f"slot_{course}"
         )
         for course in courses
