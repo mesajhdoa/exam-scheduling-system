@@ -10,6 +10,8 @@ def exact_cp_sat(
     rooms=None,
     course_sizes=None,
     room_hard_constraints=None
+    periods=None
+    
 ):
     """
     Solve the exam scheduling problem using Google OR-Tools CP-SAT.
