@@ -69,9 +69,42 @@ def exact_cp_sat(
                         index + 2
                     )
                 )
-    
-    
+    same_day_nonconsecutive_periods = []
 
+    if periods is not None:
+
+        for first_index in range(
+            len(periods)
+        ):
+
+            for second_index in range(
+                first_index + 1,
+                len(periods)
+            ):
+
+                first_period = periods[
+                    first_index
+                ]
+
+                second_period = periods[
+                    second_index
+                ]
+
+                if (
+                    first_period["date"]
+                    == second_period["date"]
+                    and second_index
+                    - first_index
+                    > 1
+                ):
+
+                    same_day_nonconsecutive_periods.append(
+                        (
+                            first_index + 1,
+                            second_index + 1
+                        )
+                    )
+    
     # --------------------------------------------------
     # Slot Variables
     # --------------------------------------------------
