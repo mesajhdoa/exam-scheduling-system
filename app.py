@@ -1253,22 +1253,32 @@ if df is not None:
 
                     comparison_df["Gap (%)"] = comparison_df.apply(
                         lambda row: (
-                            round(
-                                (
-                                    row["Cost"]
-                                    - optimal_cost
+                            "N/A"
+                            if row["Valid"] != "Yes"
+                            else (
+                                0.0
+                                if (
+                                    optimal_cost == 0
+                                    and row["Cost"] == 0
                                 )
-                                / optimal_cost
-                                * 100,
-                                2
+                                else (
+                                    "N/A"
+                                    if optimal_cost == 0
+                                    else round(
+                                        (
+                                            row["Cost"]
+                                            - optimal_cost
+                                        )
+                                        / optimal_cost
+                                        * 100,
+                                        2
+                                    )
+                                )
                             )
-                            if row["Valid"] == "Yes"
-                            else "N/A"
                         ),
                         axis=1
                     )
-            
-
+                
                 else:
 
                     comparison_df["Gap (%)"] = "N/A"
