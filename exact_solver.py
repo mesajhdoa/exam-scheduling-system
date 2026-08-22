@@ -48,7 +48,28 @@ def exact_cp_sat(
         if periods is not None and len(periods) > 0
         else number_of_courses
     )
+    same_day_consecutive_periods = []
 
+    if periods is not None:
+
+        for index in range(
+            len(periods) - 1
+        ):
+
+            current_period = periods[index]
+            next_period = periods[index + 1]
+
+            if (
+                current_period["date"]
+                == next_period["date"]
+            ):
+                same_day_consecutive_periods.append(
+                    (
+                        index + 1,
+                        index + 2
+                    )
+                )
+    
     
 
     # --------------------------------------------------
