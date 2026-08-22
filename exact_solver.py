@@ -579,6 +579,106 @@ def exact_cp_sat(
                         * two_in_a_row
                     )
 
+        # --------------------------------------------------
+        # ITC2007 TWOINADAY
+        # --------------------------------------------------
+
+        two_in_a_day_weight = int(
+            institutional_weightings.get(
+                "TWOINADAY",
+                0
+            )
+        )
+
+        nonconsecutive_pairs = set(
+            same_day_nonconsecutive_periods
+        )
+
+        nonconsecutive_pairs.update(
+            (
+                period_b,
+                period_a
+            )
+            for period_a, period_b
+            in same_day_nonconsecutive_periods
+        )
+
+        two_in_a_day_tuples = []
+
+        for period_a in range(
+            1,
+            number_of_periods + 1
+        ):
+
+            for period_b in range(
+                1,
+                number_of_periods + 1
+            ):
+
+                is_two_in_a_day = (
+                    1
+                    if (
+                        period_a,
+                        period_b
+                    ) in nonconsecutive_pairs
+                    else 0
+                )
+
+                two_in_a_day_tuples.append(
+                    (
+                        period_a,
+                        period_b,
+                        is_two_in_a_day
+                    )
+                )
+
+        for student_id, course_list in (
+            students.items()
+        ):
+
+            for i in range(
+                len(course_list)
+            ):
+
+                for j in range(
+                    i + 1,
+                    len(course_list)
+                ):
+
+                    course_a = course_list[i]
+                    course_b = course_list[j]
+
+                    if (
+                        course_a not in slot
+                        or course_b not in slot
+                    ):
+                        continue
+
+                    two_in_a_day = (
+                        model.NewBoolVar(
+                            (
+                                f"two_in_a_day_"
+                                f"{student_id}_"
+                                f"{i}_"
+                                f"{j}"
+                            )
+                        )
+                    )
+
+                    model.AddAllowedAssignments(
+                        [
+                            slot[course_a],
+                            slot[course_b],
+                            two_in_a_day
+                        ],
+                        two_in_a_day_tuples
+                    )
+
+                    penalty_variables.append(
+                        two_in_a_day_weight
+                        * two_in_a_day
+                    )
+    
     # --------------------------------------------------
     # Original Project Penalty
     # Used for Manual / CSV / Quick Demo
