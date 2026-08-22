@@ -436,75 +436,188 @@ def exact_cp_sat(
     )
 
     # --------------------------------------------------
-    # Consecutive Exam Penalty
+    # Exam Spacing Penalty
     # --------------------------------------------------
 
     penalty_variables = []
 
-    for student_id, course_list in (
-        students.items()
+    # --------------------------------------------------
+    # ITC2007 TWOINAROW
+    # --------------------------------------------------
+
+    if (
+        institutional_weightings is not None
+        and periods is not None
     ):
 
-        for i in range(
-            len(course_list)
+        two_in_a_row_weight = int(
+            institutional_weightings.get(
+                "TWOINAROW",
+                0
+            )
+        )
+
+        consecutive_pairs = set(
+            same_day_consecutive_periods
+        )
+
+        consecutive_pairs.update(
+            (
+                period_b,
+                period_a
+            )
+            for period_a, period_b
+            in same_day_consecutive_periods
+        )
+
+        two_in_a_row_tuples = []
+
+        for period_a in range(
+            1,
+            number_of_periods + 1
         ):
 
-            for j in range(
-                i + 1,
+            for period_b in range(
+                1,
+                number_of_periods + 1
+            ):
+
+                is_two_in_a_row = (
+                    1
+                    if (
+                        period_a,
+                        period_b
+                    ) in consecutive_pairs
+                    else 0
+                )
+
+                two_in_a_row_tuples.append(
+                    (
+                        period_a,
+                        period_b,
+                        is_two_in_a_row
+                    )
+                )
+
+        for student_id, course_list in (
+            students.items()
+        ):
+
+            for i in range(
                 len(course_list)
             ):
 
-                course_a = course_list[i]
-                course_b = course_list[j]
-
-                if (
-                    course_a not in slot
-                    or course_b not in slot
+                for j in range(
+                    i + 1,
+                    len(course_list)
                 ):
-                    continue
 
-                difference = model.NewIntVar(
-                    0,
-                    number_of_courses,
-                    (
-                        f"diff_"
-                        f"{student_id}_"
-                        f"{i}_"
-                        f"{j}"
+                    course_a = course_list[i]
+                    course_b = course_list[j]
+
+                    if (
+                        course_a not in slot
+                        or course_b not in slot
+                    ):
+                        continue
+
+                    two_in_a_row = (
+                        model.NewBoolVar(
+                            (
+                                f"two_in_a_row_"
+                                f"{student_id}_"
+                                f"{i}_"
+                                f"{j}"
+                            )
+                        )
                     )
-                )
 
-                model.AddAbsEquality(
-                    difference,
-                    slot[course_a]
-                    - slot[course_b]
-                )
-
-                consecutive = model.NewBoolVar(
-                    (
-                        f"consecutive_"
-                        f"{student_id}_"
-                        f"{i}_"
-                        f"{j}"
+                    model.AddAllowedAssignments(
+                        [
+                            slot[course_a],
+                            slot[course_b],
+                            two_in_a_row
+                        ],
+                        two_in_a_row_tuples
                     )
-                )
 
-                model.Add(
-                    difference == 1
-                ).OnlyEnforceIf(
-                    consecutive
-                )
+                    penalty_variables.append(
+                        two_in_a_row_weight
+                        * two_in_a_row
+                    )
 
-                model.Add(
-                    difference != 1
-                ).OnlyEnforceIf(
-                    consecutive.Not()
-                )
+    # --------------------------------------------------
+    # Original Project Penalty
+    # Used for Manual / CSV / Quick Demo
+    # --------------------------------------------------
 
-                penalty_variables.append(
-                    consecutive
-                )
+    else:
 
+        for student_id, course_list in (
+            students.items()
+        ):
+
+            for i in range(
+                len(course_list)
+            ):
+
+                for j in range(
+                    i + 1,
+                    len(course_list)
+                ):
+
+                    course_a = course_list[i]
+                    course_b = course_list[j]
+
+                    if (
+                        course_a not in slot
+                        or course_b not in slot
+                    ):
+                        continue
+
+                    difference = model.NewIntVar(
+                        0,
+                        number_of_periods,
+                        (
+                            f"diff_"
+                            f"{student_id}_"
+                            f"{i}_"
+                            f"{j}"
+                        )
+                    )
+
+                    model.AddAbsEquality(
+                        difference,
+                        slot[course_a]
+                        - slot[course_b]
+                    )
+
+                    consecutive = model.NewBoolVar(
+                        (
+                            f"consecutive_"
+                            f"{student_id}_"
+                            f"{i}_"
+                            f"{j}"
+                        )
+                    )
+
+                    model.Add(
+                        difference == 1
+                    ).OnlyEnforceIf(
+                        consecutive
+                    )
+
+                    model.Add(
+                        difference != 1
+                    ).OnlyEnforceIf(
+                        consecutive.Not()
+                    )
+
+                    penalty_variables.append(
+                        consecutive
+                    )
+
+    
     # --------------------------------------------------
     # Objective
     # --------------------------------------------------
