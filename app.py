@@ -67,6 +67,121 @@ def validate_itc2007_period_constraints(
 
     return True
 
+def validate_itc2007_room_constraints(
+    schedule,
+    room_assignment,
+    rooms,
+    course_sizes,
+    room_hard_constraints
+):
+    """
+    Validate supported ITC2007 room hard constraints.
+
+    Checks:
+    - every exam has a valid room
+    - room capacity
+    - ROOM_EXCLUSIVE
+    """
+
+    if schedule is None:
+        return False
+
+    if room_assignment is None:
+        return False
+
+    if not rooms:
+        return False
+
+    room_load = {}
+    room_exams = {}
+
+    for course, slot_number in schedule.items():
+
+        if course not in room_assignment:
+            return False
+
+        room_id = room_assignment[course]
+
+        if (
+            room_id < 0
+            or room_id >= len(rooms)
+        ):
+            return False
+
+        key = (
+            room_id,
+            slot_number
+        )
+
+        room_load[key] = (
+            room_load.get(key, 0)
+            + int(
+                course_sizes.get(
+                    course,
+                    0
+                )
+            )
+        )
+
+        room_exams.setdefault(
+            key,
+            []
+        ).append(course)
+
+    # ----------------------------------------------
+    # Room Capacity
+    # ----------------------------------------------
+
+    for key, student_count in room_load.items():
+
+        room_id, _ = key
+
+        capacity = int(
+            rooms[room_id]["capacity"]
+        )
+
+        if student_count > capacity:
+            return False
+
+    # ----------------------------------------------
+    # ROOM_EXCLUSIVE
+    # ----------------------------------------------
+
+    if room_hard_constraints:
+
+        for constraint in room_hard_constraints:
+
+            if (
+                constraint["constraint"]
+                != "ROOM_EXCLUSIVE"
+            ):
+                continue
+
+            exam = (
+                f"Exam {constraint['exam_id']}"
+            )
+
+            if (
+                exam not in schedule
+                or exam not in room_assignment
+            ):
+                return False
+
+            key = (
+                room_assignment[exam],
+                schedule[exam]
+            )
+
+            if len(
+                room_exams.get(
+                    key,
+                    []
+                )
+            ) != 1:
+                return False
+
+    return True
+
 # --------------------------------------------------
 # Page Settings
 # --------------------------------------------------
