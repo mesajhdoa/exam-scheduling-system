@@ -771,6 +771,86 @@ def exact_cp_sat(
                         penalty_variables.append(
                             spread_violation
                         )
+
+        # --------------------------------------------------
+        # ITC2007 FRONTLOAD
+        # --------------------------------------------------
+
+        if (
+            exams is not None
+            and "FRONTLOAD"
+            in institutional_weightings
+        ):
+
+            frontload_config = (
+                institutional_weightings[
+                    "FRONTLOAD"
+                ]
+            )
+
+            largest_exam_count = int(
+                frontload_config[
+                    "largest_exams"
+                ]
+            )
+
+            last_period_count = int(
+                frontload_config[
+                    "last_periods"
+                ]
+            )
+
+            frontload_penalty = int(
+                frontload_config[
+                    "penalty"
+                ]
+            )
+
+            largest_exams = sorted(
+                exams,
+                key=lambda exam: (
+                    -exam["student_count"],
+                    exam["exam_id"]
+                )
+            )[:largest_exam_count]
+
+            first_late_period = (
+                number_of_periods
+                - last_period_count
+                + 1
+            )
+
+            for exam_info in largest_exams:
+
+                course = exam_info[
+                    "exam_name"
+                ]
+
+                if course not in slot:
+                    continue
+
+                late_exam = model.NewBoolVar(
+                    f"frontload_{course}"
+                )
+
+                model.Add(
+                    slot[course]
+                    >= first_late_period
+                ).OnlyEnforceIf(
+                    late_exam
+                )
+
+                model.Add(
+                    slot[course]
+                    < first_late_period
+                ).OnlyEnforceIf(
+                    late_exam.Not()
+                )
+
+                penalty_variables.append(
+                    frontload_penalty
+                    * late_exam
+                )
     
     # --------------------------------------------------
     # Original Project Penalty
