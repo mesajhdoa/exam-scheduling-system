@@ -1262,11 +1262,20 @@ def exact_cp_sat(
     # --------------------------------------------------
     # Final Metrics
     # --------------------------------------------------
+    if periods is not None:
 
-    used_slots = max(
-        schedule.values()
-    )
+        used_slots = len(
+            set(
+                schedule.values()
+            )
+        )
 
+    else:
+
+        used_slots = max(
+            schedule.values()
+        )
+    
     penalty_value = sum(
         solver.Value(variable)
         for variable in penalty_variables
