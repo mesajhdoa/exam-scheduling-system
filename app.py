@@ -1347,25 +1347,46 @@ if df is not None:
                 else:
 
                     comparison_df["Gap (%)"] = "N/A"
-                
-                comparison_df = (
-                    comparison_df.sort_values(
+                if benchmark_data is None:
+
+                    comparison_df = (
+                        comparison_df.sort_values(
+                            [
+                                "Cost",
+                                "Runtime (ms)"
+                            ]
+                        )
+                        .reset_index(
+                            drop=True
+                        )
+                    )
+
+                    display_df = comparison_df
+
+                else:
+
+                    display_df = comparison_df.copy()
+
+                    heuristic_mask = (
+                        display_df["Algorithm"]
+                        != "Exact CP-SAT"
+                    )
+
+                    display_df.loc[
+                        heuristic_mask,
                         [
+                            "Penalty",
                             "Cost",
-                            "Runtime (ms)"
+                            "Gap (%)"
                         ]
-                    )
-                    .reset_index(
-                        drop=True
-                    )
-                )
+                    ] = "N/A"
 
                 st.dataframe(
-                    comparison_df,
+                    display_df,
                     use_container_width=True,
                     hide_index=True
                 )
-
+                
                 # ----------------------------------
                 # Exact CP-SAT Room Assignment
                 # ----------------------------------
