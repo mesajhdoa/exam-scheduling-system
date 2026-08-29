@@ -285,19 +285,17 @@ slot_weight = st.sidebar.slider(
 # --------------------------------------------------
 # Exam Calendar
 # --------------------------------------------------
-
 st.sidebar.subheader("Exam Calendar")
+
+st.sidebar.caption(
+    "Used for Manual, CSV, and Quick Demo schedules. "
+    "ITC2007 Benchmark mode uses the benchmark's own "
+    "period dates and times."
+)
 
 start_date = st.sidebar.date_input(
     "First Exam Date"
 )
-
-exam_times = st.sidebar.multiselect(
-    "Exam Times",
-    ["09:00", "13:00", "16:00"],
-    default=["09:00", "13:00"]
-)
-
 
 # --------------------------------------------------
 # Student Data Input
