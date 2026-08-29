@@ -991,16 +991,27 @@ if df is not None:
                     st.caption(
                         f"Gregorian: {current_date}"
                     )
+                    if benchmark_data is not None:
+
+                        calendar_times = (
+                            day_schedule["Time"]
+                            .drop_duplicates()
+                            .tolist()
+                        )
+
+                    else:
+
+                        calendar_times = exam_times
 
                     time_columns = st.columns(
-                        len(exam_times)
+                        len(calendar_times)
                     )
 
                     for column, exam_time in zip(
                         time_columns,
-                        exam_times
+                        calendar_times
                     ):
-
+                    
                         with column:
 
                             st.markdown(
