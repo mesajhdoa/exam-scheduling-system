@@ -18,52 +18,109 @@ from scheduler_core import (
 )
 from exact_solver import exact_cp_sat
 from benchmark_loader import load_itc2007_exam
-
 def validate_itc2007_period_constraints(
     schedule,
-    period_hard_constraints
+    period_hard_constraints,
+    periods=None,
+    exams=None
 ):
     """
     Validate supported ITC2007 period hard constraints.
 
-    Currently supports:
+    Checks:
     - EXCLUSION
     - EXAM_COINCIDENCE
+    - AFTER
+    - PERIOD UTILISATION
     """
 
     if schedule is None:
         return False
 
-    if not period_hard_constraints:
-        return True
+    # --------------------------------------------------
+    # Period Hard Constraints
+    # --------------------------------------------------
 
-    for constraint in period_hard_constraints:
+    if period_hard_constraints:
 
-        exam_a = f"Exam {constraint['exam_a']}"
-        exam_b = f"Exam {constraint['exam_b']}"
+        for constraint in period_hard_constraints:
 
-        if (
-            exam_a not in schedule
-            or exam_b not in schedule
-        ):
-            return False
+            exam_a = f"Exam {constraint['exam_a']}"
+            exam_b = f"Exam {constraint['exam_b']}"
 
-        constraint_type = constraint["constraint"]
-
-        if constraint_type == "EXCLUSION":
-
-            if schedule[exam_a] == schedule[exam_b]:
+            if (
+                exam_a not in schedule
+                or exam_b not in schedule
+            ):
                 return False
 
-        elif constraint_type == "EXAM_COINCIDENCE":
+            constraint_type = constraint[
+                "constraint"
+            ]
 
-            if schedule[exam_a] != schedule[exam_b]:
-                return False
-        elif constraint_type == "AFTER":
+            if constraint_type == "EXCLUSION":
 
-            if schedule[exam_a] <= schedule[exam_b]:
+                if (
+                    schedule[exam_a]
+                    == schedule[exam_b]
+                ):
+                    return False
+
+            elif constraint_type == "EXAM_COINCIDENCE":
+
+                if (
+                    schedule[exam_a]
+                    != schedule[exam_b]
+                ):
+                    return False
+
+            elif constraint_type == "AFTER":
+
+                if (
+                    schedule[exam_a]
+                    <= schedule[exam_b]
+                ):
+                    return False
+
+    # --------------------------------------------------
+    # ITC2007 PERIOD UTILISATION
+    # Exam duration <= period duration
+    # --------------------------------------------------
+
+    if (
+        periods is not None
+        and exams is not None
+    ):
+
+        exam_durations = {
+            exam["exam_name"]: int(
+                exam["duration"]
+            )
+            for exam in exams
+        }
+
+        for course, period_number in schedule.items():
+
+            if course not in exam_durations:
                 return False
-    
+
+            if (
+                period_number < 1
+                or period_number > len(periods)
+            ):
+                return False
+
+            period_duration = int(
+                periods[
+                    period_number - 1
+                ]["duration"]
+            )
+
+            if (
+                exam_durations[course]
+                > period_duration
+            ):
+                return False
 
     return True
 
