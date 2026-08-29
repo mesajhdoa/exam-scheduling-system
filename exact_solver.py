@@ -476,11 +476,12 @@ def exact_cp_sat(
         min_slot,
         list(slot.values())
     )
+    if periods is None:
 
-    model.Add(
-        min_slot == 1
-    )
-
+        model.Add(
+            min_slot == 1
+        )
+    
     # --------------------------------------------------
     # Exam Spacing Penalty
     # --------------------------------------------------
