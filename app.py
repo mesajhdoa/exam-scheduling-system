@@ -756,12 +756,22 @@ if df is not None:
                 # ----------------------------------
                 # Optimization Results
                 # ----------------------------------
-
-                valid = validate_schedule(
-                    graph,
-                    schedule
+                valid = (
+                    validate_schedule(
+                        graph,
+                        schedule
+                    )
+                    and (
+                        benchmark_data is None
+                        or validate_itc2007_period_constraints(
+                            schedule,
+                            benchmark_data["period_hard_constraints"],
+                            benchmark_data["periods"],
+                            benchmark_data["exams"]
+                        )
+                    )
                 )
-
+                
                 penalty = consecutive_exam_penalty(
                     students,
                     schedule
