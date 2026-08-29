@@ -797,17 +797,24 @@ if df is not None:
                     "Time Slots",
                     slots
                 )
-
                 r2.metric(
-                    "Penalty",
+                    (
+                        "Legacy Penalty"
+                        if benchmark_data is not None
+                        else "Penalty"
+                    ),
                     penalty
                 )
 
                 r3.metric(
-                    "Total Cost",
+                    (
+                        "Legacy Cost"
+                        if benchmark_data is not None
+                        else "Total Cost"
+                    ),
                     cost
                 )
-
+                
                 r4.metric(
                     "Valid Schedule",
                     "Yes" if valid else "No"
