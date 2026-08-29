@@ -1362,7 +1362,6 @@ if df is not None:
                     )
 
                     display_df = comparison_df
-
                 else:
 
                     display_df = comparison_df.copy()
@@ -1370,6 +1369,21 @@ if df is not None:
                     heuristic_mask = (
                         display_df["Algorithm"]
                         != "Exact CP-SAT"
+                    )
+
+                    display_df["Penalty"] = (
+                        display_df["Penalty"]
+                        .astype("object")
+                    )
+
+                    display_df["Cost"] = (
+                        display_df["Cost"]
+                        .astype("object")
+                    )
+
+                    display_df["Gap (%)"] = (
+                        display_df["Gap (%)"]
+                        .astype("object")
                     )
 
                     display_df.loc[
@@ -1380,7 +1394,7 @@ if df is not None:
                             "Gap (%)"
                         ]
                     ] = "N/A"
-
+                
                 st.dataframe(
                     display_df,
                     use_container_width=True,
