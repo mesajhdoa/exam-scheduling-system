@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import timedelta
+from datetime import timedelta, datetime
 import jdatetime
 import random 
 import time
@@ -824,8 +824,29 @@ if df is not None:
                 # ----------------------------------
                 # Slot -> Date and Time
                 # ----------------------------------
-
                 def slot_to_datetime(slot):
+
+                    if benchmark_data is not None:
+
+                        period_info = (
+                            benchmark_data["periods"][
+                                slot - 1
+                            ]
+                        )
+
+                        exam_date = datetime.strptime(
+                            period_info["date"],
+                            "%d:%m:%Y"
+                        ).date()
+
+                        exam_time = (
+                            period_info["time"][:5]
+                        )
+
+                        return (
+                            exam_date,
+                            exam_time
+                        )
 
                     slot_index = slot - 1
 
@@ -860,8 +881,7 @@ if df is not None:
                         exam_date,
                         exam_time
                     )
-
-
+                
                 # ----------------------------------
                 # Create Schedule Table
                 # ----------------------------------
