@@ -1179,7 +1179,9 @@ if df is not None:
         benchmark_data is None
         or validate_itc2007_period_constraints(
             result_schedule,
-            benchmark_data["period_hard_constraints"]
+            benchmark_data["period_hard_constraints"],
+            benchmark_data["periods"],
+            benchmark_data["exams"]
         )
     )
 )
