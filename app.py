@@ -1467,30 +1467,37 @@ if df is not None:
                         "Exact Solver Status",
                         exact_info["status"]
                     )
-                
-                
+                if benchmark_data is None:
 
-
-                st.subheader(
-                    "Cost Comparison"
-                )
-
-                cost_chart = (
-                    comparison_df[
-                        [
-                            "Algorithm",
-                            "Cost"
-                        ]
-                    ]
-                    .set_index(
-                        "Algorithm"
+                    st.subheader(
+                        "Cost Comparison"
                     )
-                )
 
-                st.bar_chart(
-                    cost_chart
-                )
+                    cost_chart = (
+                        comparison_df[
+                            [
+                                "Algorithm",
+                                "Cost"
+                            ]
+                        ]
+                        .set_index(
+                            "Algorithm"
+                        )
+                    )
 
+                    st.bar_chart(
+                        cost_chart
+                    )
+
+                else:
+
+                    st.info(
+                        "Cost comparison is hidden in ITC2007 Benchmark mode "
+                        "because heuristic costs use the project's legacy "
+                        "objective, while Exact CP-SAT uses the ITC2007 "
+                        "penalty objective."
+                    )
+                
                 st.subheader(
                     "Runtime Comparison"
                 )
