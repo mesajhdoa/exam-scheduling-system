@@ -206,7 +206,40 @@ def exact_cp_sat(
                     slot[exam_a]
                     > slot[exam_b]
                 )
+    # --------------------------------------------------
+    # ITC2007 PERIOD UTILISATION
+    # Exam duration must fit inside the assigned period.
+    # --------------------------------------------------
 
+    if (
+        periods is not None
+        and exam_duration
+    ):
+
+        for course in courses:
+
+            duration = exam_duration.get(
+                course
+            )
+
+            if duration is None:
+                continue
+
+            for period_number, period_info in enumerate(
+                periods,
+                start=1
+            ):
+
+                period_duration = int(
+                    period_info["duration"]
+                )
+
+                if duration > period_duration:
+
+                    model.Add(
+                        slot[course] != period_number
+                    )
+    
     # --------------------------------------------------
     # Room Assignment
     # --------------------------------------------------
