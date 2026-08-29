@@ -519,15 +519,15 @@ else:
                 "Periods",
                 metadata["period_count"]
             )
-
             st.info(
-                "Benchmark mode currently evaluates the "
-                "student conflict graph with the project's "
-                "existing scheduling objective. Full ITC2007 "
-                "room and hard-constraint optimization will "
-                "be integrated separately."
+                "In ITC2007 Benchmark mode, Exact CP-SAT uses "
+                "benchmark periods, rooms, supported hard "
+                "constraints, and ITC2007 penalty components. "
+                "Heuristic algorithms are included for runtime "
+                "and feasibility reference; their legacy costs "
+                "are not compared with the ITC2007 Exact objective."
             )
-
+        
         except Exception as error:
 
             st.error(
