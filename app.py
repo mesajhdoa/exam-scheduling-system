@@ -1877,7 +1877,15 @@ if df is not None:
                             ),
                             int(exact_info["cost"])
                         )
-
+                exact_col3.metric(
+                    "Independent ITC2007 Cost",
+                    (
+                        independent_evaluation["Total"]
+                        if independent_evaluation is not None
+                        else "N/A"
+                    )
+                )
+                    
                     best_col3.metric(
                         "Exact Solver Status",
                         exact_info["status"]
@@ -1885,9 +1893,8 @@ if df is not None:
                 st.subheader(
                     "Exact Solver Information"
                 )
-
-                exact_col1, exact_col2 = st.columns(2)
-
+                exact_col1, exact_col2, exact_col3 = st.columns(3)
+                
                 exact_col1.metric(
                     "Exact Solver Status",
                     exact_info["status"]
