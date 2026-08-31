@@ -712,9 +712,11 @@ if df is not None:
                 "Generate Exam Schedule",
                 type="primary"
             ):
-
-                if not exam_times:
-
+                if (
+                    benchmark_data is None
+                    and not exam_times
+                ):
+                
                     st.error(
                         "Please select at least one exam time."
                     )
