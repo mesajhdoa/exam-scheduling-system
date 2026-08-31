@@ -1207,7 +1207,6 @@ if df is not None:
                     result_slots = max(
                         result_schedule.values()
                     )
-
                     comparison_rows.append(
                         {
                             "Algorithm": method,
@@ -1218,7 +1217,21 @@ if df is not None:
                                 runtime_ms,
                                 3
                             ),
-                            "Valid": "Yes" if result_valid else "No"
+                            "Valid": (
+                                "Yes"
+                                if (
+                                    benchmark_data is None
+                                    and result_valid
+                                )
+                                else (
+                                    "Period Only"
+                                    if (
+                                        benchmark_data is not None
+                                        and result_valid
+                                    )
+                                    else "No"
+                                )
+                            )
                         }
                     )
                 
