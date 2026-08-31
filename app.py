@@ -1915,33 +1915,6 @@ if df is not None:
                         else "N/A"
                     )
                 )
-                    
-                    best_col3.metric(
-                        "Exact Solver Status",
-                        exact_info["status"]
-                    )
-                st.subheader(
-                    "Exact Solver Information"
-                )
-                exact_col1, exact_col2, exact_col3 = st.columns(3)
-                
-                exact_col1.metric(
-                    "Exact Solver Status",
-                    exact_info["status"]
-                )
-
-                exact_col2.metric(
-                    (
-                        "Optimal Cost"
-                        if exact_info["optimal"]
-                        else "Best Feasible Cost"
-                    ),
-                    (
-                        int(exact_info["cost"])
-                        if exact_info["cost"] is not None
-                        else "N/A"
-                    )
-                )
                 
                 if benchmark_data is None:
 
