@@ -1625,6 +1625,26 @@ if df is not None:
                     exact_info["optimal"]
                     and exact_info["cost"] is not None
                 )
+                independent_evaluation = None
+
+                if (
+                    benchmark_data is not None
+                    and exact_schedule is not None
+                    and exact_info.get(
+                        "room_assignment"
+                    )
+                ):
+
+                    independent_evaluation = (
+                        evaluate_itc2007_penalty(
+                            exact_schedule,
+                            exact_info[
+                                "room_assignment"
+                            ],
+                            students,
+                            benchmark_data
+                        )
+                    )
                 
                 if exact_schedule is not None:
 
