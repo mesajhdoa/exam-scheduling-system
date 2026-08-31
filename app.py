@@ -699,7 +699,15 @@ if df is not None:
             # --------------------------------------
 
             st.subheader("3. Generate Schedule")
+            if benchmark_data is not None:
 
+                st.warning(
+                    "In ITC2007 Benchmark mode, this button runs "
+                    "the selected heuristic algorithm for reference only. "
+                    "Use 'Compare All Algorithms' to run the full "
+                    "ITC2007 Exact CP-SAT model."
+                )
+            
             if st.button(
                 "Generate Exam Schedule",
                 type="primary"
