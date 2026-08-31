@@ -123,6 +123,330 @@ def validate_itc2007_period_constraints(
                 return False
 
     return True
+def evaluate_itc2007_penalty(
+    schedule,
+    room_assignment,
+    students,
+    benchmark_data
+):
+    """
+    Independently evaluate the ITC2007 soft penalty.
+
+    Returns a penalty breakdown and the total penalty.
+    """
+
+    if (
+        schedule is None
+        or room_assignment is None
+        or benchmark_data is None
+    ):
+        return None
+
+    periods = benchmark_data["periods"]
+    rooms = benchmark_data["rooms"]
+    exams = benchmark_data["exams"]
+
+    weights = benchmark_data[
+        "institutional_weightings"
+    ]
+
+    two_in_a_row_weight = int(
+        weights.get(
+            "TWOINAROW",
+            0
+        )
+    )
+
+    two_in_a_day_weight = int(
+        weights.get(
+            "TWOINADAY",
+            0
+        )
+    )
+
+    period_spread = int(
+        weights.get(
+            "PERIODSPREAD",
+            0
+        )
+    )
+
+    non_mixed_weight = int(
+        weights.get(
+            "NONMIXEDDURATIONS",
+            0
+        )
+    )
+
+    two_in_a_row_penalty = 0
+    two_in_a_day_penalty = 0
+    period_spread_penalty = 0
+
+    # --------------------------------------------------
+    # Student-related penalties
+    # --------------------------------------------------
+
+    for _, course_list in students.items():
+
+        for i in range(
+            len(course_list)
+        ):
+
+            for j in range(
+                i + 1,
+                len(course_list)
+            ):
+
+                course_a = course_list[i]
+                course_b = course_list[j]
+
+                if (
+                    course_a not in schedule
+                    or course_b not in schedule
+                ):
+                    continue
+
+                period_a = schedule[
+                    course_a
+                ]
+
+                period_b = schedule[
+                    course_b
+                ]
+
+                difference = abs(
+                    period_a - period_b
+                )
+
+                date_a = periods[
+                    period_a - 1
+                ]["date"]
+
+                date_b = periods[
+                    period_b - 1
+                ]["date"]
+
+                same_day = (
+                    date_a == date_b
+                )
+
+                if (
+                    same_day
+                    and difference == 1
+                ):
+
+                    two_in_a_row_penalty += (
+                        two_in_a_row_weight
+                    )
+
+                elif (
+                    same_day
+                    and difference > 1
+                ):
+
+                    two_in_a_day_penalty += (
+                        two_in_a_day_weight
+                    )
+
+                if (
+                    period_spread > 0
+                    and 0
+                    < difference
+                    <= period_spread
+                ):
+
+                    period_spread_penalty += 1
+
+    # --------------------------------------------------
+    # FRONTLOAD
+    # --------------------------------------------------
+
+    frontload_penalty = 0
+
+    if "FRONTLOAD" in weights:
+
+        frontload_config = weights[
+            "FRONTLOAD"
+        ]
+
+        largest_exam_count = int(
+            frontload_config[
+                "largest_exams"
+            ]
+        )
+
+        last_period_count = int(
+            frontload_config[
+                "last_periods"
+            ]
+        )
+
+        frontload_weight = int(
+            frontload_config[
+                "penalty"
+            ]
+        )
+
+        largest_exams = sorted(
+            exams,
+            key=lambda exam: (
+                -exam["student_count"],
+                exam["exam_id"]
+            )
+        )[:largest_exam_count]
+
+        first_late_period = (
+            len(periods)
+            - last_period_count
+            + 1
+        )
+
+        for exam in largest_exams:
+
+            exam_name = exam[
+                "exam_name"
+            ]
+
+            if (
+                exam_name in schedule
+                and schedule[exam_name]
+                >= first_late_period
+            ):
+
+                frontload_penalty += (
+                    frontload_weight
+                )
+
+    # --------------------------------------------------
+    # Exam Durations
+    # --------------------------------------------------
+
+    exam_durations = {
+        exam["exam_name"]: int(
+            exam["duration"]
+        )
+        for exam in exams
+    }
+
+    # --------------------------------------------------
+    # NONMIXEDDURATIONS
+    # --------------------------------------------------
+
+    room_period_durations = {}
+
+    for course, period_number in (
+        schedule.items()
+    ):
+
+        if course not in room_assignment:
+            continue
+
+        room_id = room_assignment[
+            course
+        ]
+
+        key = (
+            room_id,
+            period_number
+        )
+
+        room_period_durations.setdefault(
+            key,
+            set()
+        ).add(
+            exam_durations[course]
+        )
+
+    mixed_duration_penalty = 0
+
+    for durations in (
+        room_period_durations.values()
+    ):
+
+        mixed_duration_penalty += (
+            max(
+                0,
+                len(durations) - 1
+            )
+            * non_mixed_weight
+        )
+
+    # --------------------------------------------------
+    # ROOM PENALTY
+    # --------------------------------------------------
+
+    room_penalty = 0
+
+    for course in schedule:
+
+        if course not in room_assignment:
+            continue
+
+        room_id = room_assignment[
+            course
+        ]
+
+        room_penalty += int(
+            rooms[
+                room_id
+            ]["penalty"]
+        )
+
+    # --------------------------------------------------
+    # PERIOD PENALTY
+    # --------------------------------------------------
+
+    period_penalty = 0
+
+    for _, period_number in (
+        schedule.items()
+    ):
+
+        period_penalty += int(
+            periods[
+                period_number - 1
+            ]["penalty"]
+        )
+
+    # --------------------------------------------------
+    # Total
+    # --------------------------------------------------
+
+    total_penalty = (
+        two_in_a_row_penalty
+        + two_in_a_day_penalty
+        + period_spread_penalty
+        + mixed_duration_penalty
+        + frontload_penalty
+        + room_penalty
+        + period_penalty
+    )
+
+    return {
+        "Two in a Row": (
+            two_in_a_row_penalty
+        ),
+        "Two in a Day": (
+            two_in_a_day_penalty
+        ),
+        "Period Spread": (
+            period_spread_penalty
+        ),
+        "Mixed Durations": (
+            mixed_duration_penalty
+        ),
+        "Front Load": (
+            frontload_penalty
+        ),
+        "Room Penalty": (
+            room_penalty
+        ),
+        "Period Penalty": (
+            period_penalty
+        ),
+        "Total": total_penalty
+    }
+
 
 def validate_itc2007_room_constraints(
     schedule,
