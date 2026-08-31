@@ -834,13 +834,30 @@ if df is not None:
                     ),
                     cost
                 )
-                
                 r4.metric(
-                    "Valid Schedule",
-                    "Yes" if valid else "No"
+                    (
+                        "Feasibility"
+                        if benchmark_data is not None
+                        else "Valid Schedule"
+                    ),
+                    (
+                        "Period Only"
+                        if (
+                            benchmark_data is not None
+                            and valid
+                        )
+                        else (
+                            "No"
+                            if benchmark_data is not None
+                            else (
+                                "Yes"
+                                if valid
+                                else "No"
+                            )
+                        )
+                    )
                 )
-
-
+                
                 # ----------------------------------
                 # Slot -> Date and Time
                 # ----------------------------------
